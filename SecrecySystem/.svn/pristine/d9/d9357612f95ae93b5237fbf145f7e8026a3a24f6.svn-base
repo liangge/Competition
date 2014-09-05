@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2014-5-15 13:19:24 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="com.egov.secrecysystem.model.SeScoreRecord" table="se_score_record" catalog="secrecysystem">
+        <id name="id" type="string">
+            <column name="ID" length="36" />
+            <generator class="uuid.hex" />
+        </id>
+        <many-to-one name="seTestPaperRecord" class="com.egov.secrecysystem.model.SeTestPaperRecord" fetch="select" cascade="save-update">
+            <column name="TESTPAPERID" length="36" />
+        </many-to-one>
+        <many-to-one name="seUser" class="com.egov.secrecysystem.model.SeUser" fetch="select">
+            <column name="USERID" length="36" />
+        </many-to-one>
+        <property name="danxuanscore" type="java.lang.Integer">
+            <column name="DANXUANSCORE" />
+        </property>
+        <property name="duoxuanscore" type="java.lang.Integer">
+            <column name="DUOXUANSCORE" />
+        </property>
+        <property name="panduanscore" type="java.lang.Integer">
+            <column name="PANDUANSCORE" />
+        </property>
+        <property name="totalscore" type="java.lang.Integer">
+            <column name="TOTALSCORE" />
+        </property>
+        <property name="remark" type="string">
+            <column name="REMARK" />
+        </property>
+        <property name="scoreremark" type="string">
+            <column name="SCOREREMARK" />
+        </property>
+    </class>
+</hibernate-mapping>

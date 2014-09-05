@@ -1,0 +1,131 @@
+package com.egov.secrecysystem.controller;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.directwebremoting.annotations.RemoteMethod;
+import org.directwebremoting.annotations.RemoteProxy;
+import org.directwebremoting.spring.SpringCreator;
+import org.json.simple.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.egov.secrecysystem.model.Function;
+import com.egov.secrecysystem.service.PaperDuoXuanService;
+import com.egov.secrecysystem.service.ProblemDuoXuanService;
+
+@RemoteProxy(creator = SpringCreator.class)
+public class ProblemDuoXuanController {
+	@Autowired
+	private ProblemDuoXuanService problemDuoXuanService;
+	@Autowired
+	private PaperDuoXuanService paperDuoXuanService;
+
+	// 显示多选题信息处理
+	@RemoteMethod
+	public Map paginationShow(String filterString, String pageNum,
+			String pageSize,String paperNum,String userLevel) {
+
+		Map map = new HashMap();
+		String whereString = Function.initSearchHql_whereString_(filterString);
+		Map<String, Object> paramsMap = Function.initSearchValues(filterString);
+		List<Map> result = problemDuoXuanService.getPageInstructors(
+				whereString, paramsMap, pageNum, pageSize,paperNum,userLevel);
+		map.put("totalProperty", problemDuoXuanService
+				.getInstructorsTotalCount(whereString, paramsMap));
+		map.put("root", result);
+		return map;
+	}
+	//初始化多选题页面
+	@RemoteMethod
+	public Map pageInit(String filterString, String pageNum,
+			String pageSize) {
+		
+		Map map = new HashMap();
+		String whereString = Function.initSearchHql_whereString_(filterString);
+		Map<String, Object> paramsMap = Function.initSearchValues(filterString);
+		List<Map> result = problemDuoXuanService.pageInit(
+				whereString, paramsMap, pageNum, pageSize);
+		map.put("totalProperty", problemDuoXuanService
+				.getInstructorsTotalCount(whereString, paramsMap));
+		map.put("root", result);
+		return map;
+	}
+	// 更新多选题
+	@RemoteMethod
+	public String updateInstructorAllInfo(JSONObject instructor) {
+		return problemDuoXuanService.updateInstructorAllInfo(instructor);
+	}
+
+	// 删除多选题
+	@RemoteMethod
+	public String deleteInstructors(List<String> ids){
+		return problemDuoXuanService.deleteInstructors(ids);
+	}
+
+	// 插入多选题答案
+	@RemoteMethod
+	public boolean insertDuoXuanAnswerRecord(List<JSONObject> duoxuanAnswers) {
+
+		return problemDuoXuanService.insertDuoXuanAnswerRecord(duoxuanAnswers);
+	}
+	//获取题目等级类型List
+	@RemoteMethod
+	public List<Map> getProblemLevelList() {
+		return problemDuoXuanService.getProblemLevelList();
+	}
+	
+	/**
+	 * @author LiangGe
+	 * @return
+	 */
+	@RemoteMethod
+	public Map generateExamPaper(String isGeneratePaper, String problemlevel, String subid, String duoxuanKeyNum, String papernum) {
+		Map map = new HashMap();
+		System.out.println("进去！！" + "problemlevel = " + problemlevel);
+		System.out.println("参数：isGeneratePaper=" + isGeneratePaper + "problemlevel=" + problemlevel + "subid = " + subid);
+		System.out.println("参数：duoxuanKeyNum=" + duoxuanKeyNum + "papernum=" + papernum);
+		List<Map> result = null;
+		if("0".equals(isGeneratePaper)) { 
+			System.out.println("多选生成试卷！");
+			result = problemDuoXuanService.generateExamPaper(problemlevel, subid, duoxuanKeyNum, Integer.parseInt(papernum));
+		} else {
+			System.out.println("多选读取试卷！");
+			result = paperDuoXuanService.getExamPaper(subid, problemlevel,Integer.parseInt(papernum));
+		}
+		 
+		map.put("totalProperty", result.size());
+		map.put("root", result);
+		System.out.println("获取信息返回：" + map.toString());
+		return map;
+	}
+	
+	/**
+	 * @author LiangGe
+	 * @param id
+	 * @param problemlevel
+	 * @param subid
+	 * @param mustright
+	 * @param keyproblem
+	 * @param papernum
+	 * @param problemids
+	 * @return
+	 */
+	@RemoteMethod
+	public JSONObject changeProblem(String id, String problemlevel, String subid, String mustright, String keyproblem, String papernum, List<String> problemids) {
+
+		List<Map> result = problemDuoXuanService.changeProblem(id,problemlevel,subid,mustright,keyproblem,Integer.parseInt(papernum),problemids);
+		if(result.size() < 1) {
+			return null;
+		}
+		Map map = result.get(0);
+		JSONObject jsonObject = new JSONObject();
+		jsonObject.put("id", map.get("id"));
+		jsonObject.put("question", map.get("question"));
+		jsonObject.put("option1", map.get("option1"));
+		jsonObject.put("option2", map.get("option2"));
+		jsonObject.put("option3", map.get("option3"));
+		jsonObject.put("option4", map.get("option4"));
+		return jsonObject;
+	}
+}

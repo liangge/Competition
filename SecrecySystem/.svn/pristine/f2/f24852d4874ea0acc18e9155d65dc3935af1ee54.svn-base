@@ -1,0 +1,67 @@
+package com.egov.secrecysystem.model;
+
+import java.util.HashSet;
+import java.util.Set;
+
+public class SeQuestionBank implements java.io.Serializable{
+	private String id;
+	private Integer problemlevel;
+	private String subname;
+	private Set seProblemDanXuans=new HashSet(0);
+	private Set seProblemDuoXuans=new HashSet(0);
+	private Set seProblemPanDuans=new HashSet(0);
+	public SeQuestionBank(){
+		
+	}
+	public SeQuestionBank(String id) {
+		super();
+		this.id = id;
+	}
+	public SeQuestionBank(String id, Integer problemlevel, String subname,
+			Set seProblemDanXuans, Set seProblemDuoXuans, Set seProblemPanDuans) {
+		super();
+		this.id = id;
+		this.problemlevel = problemlevel;
+		this.subname = subname;
+		this.seProblemDanXuans = seProblemDanXuans;
+		this.seProblemDuoXuans = seProblemDuoXuans;
+		this.seProblemPanDuans = seProblemPanDuans;
+	}
+	public String getId() {
+		return id;
+	}
+	public void setId(String id) {
+		this.id = id;
+	}
+	public Integer getProblemlevel() {
+		return problemlevel;
+	}
+	public void setProblemlevel(Integer problemlevel) {
+		this.problemlevel = problemlevel;
+	}
+	public String getSubname() {
+		return subname;
+	}
+	public void setSubname(String subname) {
+		this.subname = subname;
+	}
+	public Set getSeProblemDanXuans() {
+		return seProblemDanXuans;
+	}
+	public void setSeProblemDanXuans(Set seProblemDanXuans) {
+		this.seProblemDanXuans = seProblemDanXuans;
+	}
+	public Set getSeProblemDuoXuans() {
+		return seProblemDuoXuans;
+	}
+	public void setSeProblemDuoXuans(Set seProblemDuoXuans) {
+		this.seProblemDuoXuans = seProblemDuoXuans;
+	}
+	public Set getSeProblemPanDuans() {
+		return seProblemPanDuans;
+	}
+	public void setSeProblemPanDuans(Set seProblemPanDuans) {
+		this.seProblemPanDuans = seProblemPanDuans;
+	}
+	
+}

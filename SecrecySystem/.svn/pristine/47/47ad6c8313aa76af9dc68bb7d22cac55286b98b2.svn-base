@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2012-3-26 19:37:28 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="com.egov.secrecysystem.model.SeProblemDuoXuan" table="se_problem_duoxuan" catalog="SECRECYSYSTEM">
+        <id name="id" type="string">
+            <column name="ID" length="36" />
+            <generator class="uuid.hex" />
+        </id>
+        <property name="problemnum" type="string">
+            <column name="PROBLEMNUM" />
+        </property>
+        <property name="problemlevel" type="string">
+            <column name="PROBLEMLEVEL" />
+        </property>
+        <property name="mustright" type="string">
+            <column name="MUSTRIGHT" length="2" />
+        </property>
+         <property name="keyproblem" type="string">
+            <column name="KEYPROBLEM" length="2" />
+        </property>
+        <property name="question" type="string">
+            <column name="QUESTION" >
+                <comment>&#201;&#237;&#183;&#221;&#214;&#164;&#186;&#197;</comment>
+            </column>
+        </property>
+        <property name="option1" type="string">
+            <column name="OPTION1" >
+                <comment>&#195;&#241;&#215;&#229;</comment>
+            </column>
+        </property>
+        <property name="option2" type="string">
+            <column name="OPTION2" />
+        </property>
+         <property name="option3" type="string">
+            <column name="OPTION3" />
+        </property>
+         <property name="option4" type="string">
+            <column name="OPTION4" />
+        </property>
+        <property name="answer" type="string">
+            <column name="ANSWER" />
+        </property>
+
+
+    </class>
+</hibernate-mapping>

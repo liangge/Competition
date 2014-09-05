@@ -1,0 +1,24 @@
+package com.egov.secrecysystem.service;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.egov.secrecysystem.dao.CpUserDao;
+import com.egov.secrecysystem.model.CpUser;
+import com.egov.secrecysystem.model.SeUser;
+
+@Service
+public class CpUserService {
+	@Autowired
+	private CpUserDao cpUserDao;
+	
+	// 通过登录名得到用户
+		@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+		public CpUser getRoleByLoginName(String loginName) {
+			return cpUserDao.getRoleByLoginName(loginName);
+		}
+	
+	
+}

@@ -1,0 +1,173 @@
+package com.egov.secrecysystem.service;
+
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import org.json.simple.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.egov.secrecysystem.dao.TestPaperRecordDao;
+import com.egov.secrecysystem.dao.UserDao;
+import com.egov.secrecysystem.dao.ScoreRecordDao;
+import com.egov.secrecysystem.model.SeScoreRecord;
+import com.egov.secrecysystem.model.SeTestPaperRecord;
+import com.egov.secrecysystem.model.SeUser;
+
+@Service
+@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+public class TestPaperRecordService {
+	@Autowired
+	private TestPaperRecordDao tesstPaperRecordDao;
+	@Autowired
+	private UserDao userDao;
+	@Autowired
+	private ScoreRecordDao scoreRecordDao;
+	
+	// 获取多少次考试
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public List<Map> getPaperNumList() {
+		try {
+			List<Map> paperNumList = tesstPaperRecordDao.getPaperNumList();
+			for(Map element : paperNumList) {
+				Date starttime = (Date)element.get("starttime");
+				String examname = element.get("examname").toString();
+				SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd");
+				element.put("examname", df.format(starttime).toString() + " - " + examname);
+			}
+			return paperNumList;
+		} catch (Exception e) {
+			System.out.println("getpaperNumList error!" + e.getMessage());
+			return null;
+		}
+	}
+	
+	/**
+	 * @author yangfan
+	 * @return
+	 */
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public List<Map> getTestPaperRecordList() {
+		try {
+			List<Map> paperNumList = tesstPaperRecordDao.getTestPaperRecordList();
+			for(Map element : paperNumList) {
+				Date starttime = (Date)element.get("starttime");
+				Date endtime = (Date)element.get("endtime");
+				SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd HH:mm");
+				element.put("starttime", df.format(starttime));
+				element.put("endtime", df.format(endtime));
+			}
+			return paperNumList;
+		} catch (Exception e) {
+			System.out.println("getpaperNumList error!" + e.getMessage());
+			return null;
+		}
+	}
+	
+	
+	/**
+	 * @author yangfan
+	 * @param loginName 登录名
+	 * @param paperNum 第几次考试
+	 * @return boolean 是否参加过本次考试
+	 */
+	public boolean judgeWhetherTheUserIsExamed(String loginName, String paperNum) {
+		int paperNumMatch = Integer.parseInt(paperNum);
+		SeUser seUser = userDao.getUserByLoginName(loginName);
+		List<SeScoreRecord> seScoreRecordList = scoreRecordDao.findByProperty("seUser", seUser);
+		for(SeScoreRecord seScoreRecord : seScoreRecordList){
+			SeTestPaperRecord seTestPaperRecord = seScoreRecord.getSeTestPaperRecord();
+			int paperNumber = seTestPaperRecord.getPapernum();
+			if(paperNumber == paperNumMatch)
+				return true;
+			
+		}
+		return false;
+	}
+	
+	/**
+	 * @author LiangGe
+	 * @param examname 考试名称
+	 * @param examdate 考试日期
+	 * @param starttime 考试开始时间
+	 * @param endtime 考试结束时间
+	 * @return 考试记录id
+	 */
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = false)
+	public int savePaperInfo(JSONObject papercondition) {
+		String id = "";
+		int papernum = 0;
+		String examdate = papercondition.get("examdate").toString();
+		String start = papercondition.get("starttime").toString() + ":00";
+		String end = papercondition.get("endtime").toString() + ":00";
+		
+		Date starttime = new Date();
+		Date endtime = new Date();
+		DateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); 
+		try {
+			starttime = sdf.parse(examdate + " "+ start);
+			endtime = sdf.parse(examdate + " " + end); 
+			SeTestPaperRecord recentPaperRecord = tesstPaperRecordDao.getRecentPaperRecord();
+			if(recentPaperRecord == null) {
+				papernum = 1;
+			} else {
+				papernum = recentPaperRecord.getPapernum() + 1;
+			}
+			SeTestPaperRecord entity = new SeTestPaperRecord();
+			entity.setExamname(papercondition.get("examname").toString());
+			entity.setPapernum(papernum);
+			entity.setStarttime(starttime);
+			entity.setEndtime(endtime);
+			
+			tesstPaperRecordDao.save(entity);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			System.out.println("出现意外！！！！！！！！！！！！");
+			return 0;
+		}
+		return papernum;
+	}
+	
+	/**
+	 * @author LiangGe
+	 * @param papercondition
+	 * @return
+	 */
+	// 修改试卷基本信息
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = false)
+	public boolean modifyPaperInfo(JSONObject papercondition) {
+		try {
+			String examdate = papercondition.get("examdate").toString();
+			String start = papercondition.get("starttime").toString() + ":00";
+			String end = papercondition.get("endtime").toString() + ":00";
+			int papernum = Integer.parseInt(papercondition.get("papernum").toString().trim());
+			
+			Date starttime = new Date();
+			Date endtime = new Date();
+			DateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			
+			starttime = sdf.parse(examdate + " "+ start);
+			endtime = sdf.parse(examdate + " " + end); 
+			
+			SeTestPaperRecord entity = tesstPaperRecordDao.findByProperty("papernum", papernum).get(0);
+			entity.setExamname(papercondition.get("examname").toString());
+			entity.setPapernum(papernum);
+			entity.setStarttime(starttime);
+			entity.setEndtime(endtime);
+			
+			tesstPaperRecordDao.save(entity);
+			return true;
+		} catch (Exception e) {
+			// TODO: handle exception
+			System.out.println("modifyPaperInfo error!" + e.getMessage());
+			return false;
+		}
+	}
+}

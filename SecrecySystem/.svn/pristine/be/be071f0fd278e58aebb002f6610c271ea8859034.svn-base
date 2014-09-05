@@ -1,0 +1,1552 @@
+var paperInfoCondition = "";  // 记录考卷基本信息
+var isSavePaperInfo = false;  // 考试时间信息是否已经保存
+var isLoadNumberAndArray = false; // 已经是否已经初始化数组和总数信息
+var papernum = "0";  
+
+var nameLike = "";  
+var curRowIndex = -1;  
+var curRowProblemId = -1;
+var curExamPanel = 0;
+
+var curGradeComboIndex = -1;  // 记录当前考试人员的下拉框
+var curSubComboIndex = -1;    // 记录当前题库的下拉框
+
+var curGradeComboIndex = -2;
+var curSubComboIndex = -2;
+
+var curDanxuanProblemNumber = -1;
+var totalDanxuanProblemNumber = -1;
+var curDuoxuanProblemNumber = -1;
+var totalDuoxuanProblemNumber = -1;
+var curPanduanProblemNumber = -1;
+var totalPanduanProblemNumber = -1;
+
+var danxuanPutongProblemNumber = -1;
+var duoxuanPutongProblemNumber = -1;
+var panduanPutongProblemNumber = -1;
+
+var danxuanIdArray = new Array(50);
+var duoxuanIdArray = new Array(50);
+var panduanIdArray = new Array(50);
+
+var danxuanJsonArray = [];
+var duoxuanJsonArray = [];
+var panduanJsonArray = [];
+
+var tempJsonArray = [];
+
+var examPaperSub = [];
+
+// 手动更改题目标签
+var statisticsLable = new Ext.form.Label({
+	id : "statisticsLable",
+	text : " ",
+	width : 100,
+	autoShow : true,
+	autoWidth : true,
+	autoHeight : true
+});
+
+// 涉密人员等级
+var userlevelStore = new Ext.data.JsonStore({
+	fields:[
+	        'userlevel',
+	        'userlevelname'
+	        ]
+}); 
+
+var subStore = new Ext.data.JsonStore({
+	fields:[
+	        'id',
+	        'subname'
+	        ]
+});
+
+var xuanzeQuestion = new Ext.data.Record.create([ {
+	name : 'id'
+}, {
+	name : 'problemlevel'
+}, {
+	name : 'mustright'
+}, {
+	name : 'keyproblem'
+}, {
+	name : 'question'
+}, {
+	name : 'option1'
+}, {
+	name : 'option2'
+}, {
+	name : 'option3'
+}, {
+	name : 'option4'
+}, {
+	name : 'subid'
+}, {
+	name : 'subidmark'
+}
+]);
+
+var panduanQuestion = new Ext.data.Record.create([ {
+	name : 'id'
+}, {
+	name : 'problemlevel'
+}, {
+	name : 'mustright'
+}, {
+	name : 'keyproblem'
+}, {
+	name : 'question'
+}, {
+	name : 'subid'
+}, {
+	name : 'subidmark'
+}
+]);
+
+// 手动修改题目时候Store，选择和判断放在一起加载
+var changeProblemByHanderStore = new Ext.data.Store( {
+	reader : new Ext.data.JsonReader({
+	     totalProperty : 'totalProperty',
+	     root : 'root',
+	     idProperty:'id'
+	  }, xuanzeQuestion),
+	proxy : new Ext.ux.data.DWRProxy({
+	     dwrFunction : ProblemDanXuanController.changeProblemByHander
+	  })
+});
+
+//得到单选题的总数
+function getTotalDanxuanProblemNumber() {
+	totalDanxuanProblemNumber = danxuanQuestionStore.getCount();
+	// 单选普通题目数量
+	danxuanPutongProblemNumber = totalDanxuanProblemNumber - 0 - Number(paperInfoCondition.danxuanKeyNum);
+}
+// 得到多选题的总数
+function getTotalDuoxuanProblemNumber() {
+	totalDuoxuanProblemNumber = duoxuanQuestionStore.getCount();
+	// 多选普通题目数量
+	duoxuanPutongProblemNumber = totalDuoxuanProblemNumber - 0 - Number(paperInfoCondition.duoxuanKeyNum);
+}
+//得到判断题的总数
+function getTotalPanduanProblemNumber(){
+	totalPanduanProblemNumber = panduanQuestionStore.getCount();
+	// 判断普通题目数量
+	panduanPutongProblemNumber = totalPanduanProblemNumber - 0 - Number(paperInfoCondition.panduanKeyNum);
+}
+
+var danxuanQuestionStore = new Ext.data.Store({
+	reader : new Ext.data.JsonReader({
+		totalProperty : 'totalProperty',
+		root : 'root'
+	}, xuanzeQuestion),
+	proxy : new Ext.ux.data.DWRProxy({
+		dwrFunction : ProblemDanXuanController.generateExamPaper
+	})
+});
+
+var duoxuanQuestionStore = new Ext.data.Store({
+	reader : new Ext.data.JsonReader({
+		totalProperty : 'totalProperty',
+		root : 'root'
+	}, xuanzeQuestion),
+	proxy : new Ext.ux.data.DWRProxy({
+		dwrFunction : ProblemDuoXuanController.generateExamPaper
+	})
+});
+
+var panduanQuestionStore = new Ext.data.Store({
+	reader : new Ext.data.JsonReader({
+		totalProperty : 'totalProperty',
+		root : 'root'
+	}, panduanQuestion),
+	proxy : new Ext.ux.data.DWRProxy({
+		dwrFunction : ProblemPanDuanController.generateExamPaper
+	})
+});
+
+// 用在在单道题目切换的时候后台获取题目信息
+var danxuanChangeProblemStore = new Ext.data.Store({
+	reader : new Ext.data.JsonReader({
+		totalProperty : 'totalProperty',
+		root : 'root'
+	}, xuanzeQuestion),
+	proxy : new Ext.ux.data.DWRProxy({
+		dwrFunction : ProblemDanXuanController.changeProblem
+	})
+});
+//用在在单道题目切换的时候后台获取题目信息
+var duoxuanChangeProblemStore = new Ext.data.Store({
+	reader : new Ext.data.JsonReader({
+		totalProperty : 'totalProperty',
+		root : 'root'
+	}, xuanzeQuestion),
+	proxy : new Ext.ux.data.DWRProxy({
+		dwrFunction : ProblemDuoXuanController.changeProblem
+	})
+});
+//用在在单道题目切换的时候后台获取题目信息
+var panduanChangeProblemStore = new Ext.data.Store({
+	reader : new Ext.data.JsonReader({
+		totalProperty : 'totalProperty',
+		root : 'root'
+	}, panduanQuestion),
+	proxy : new Ext.ux.data.DWRProxy({
+		dwrFunction : ProblemPanDuanController.changeProblem
+	})
+});
+// 试卷题目初始化获取
+function danxuanQuestionStoreInit() {
+	danxuanQuestionStore.load({
+		params : {
+			isGeneratePaper:examPaperSub[curGradeComboIndex].isGeneratePaper, // 用于判断是生成试卷还是读取试卷
+			problemlevel: paperInfoCondition.userlevel,
+			subid : examPaperSub[curGradeComboIndex].subid,
+			danxuanKeyNum : examPaperSub[curGradeComboIndex].danxuanKeyNum,
+			papernum : papernum
+		}
+	});
+}
+
+//多选store取值
+function duoxuanQuestionStoreInit() {
+	duoxuanQuestionStore.load({
+		params : {
+			isGeneratePaper:examPaperSub[curGradeComboIndex].isGeneratePaper,
+			problemlevel: paperInfoCondition.userlevel,
+			// subid: paperInfoCondition.subid,
+			subid : examPaperSub[curGradeComboIndex].subid,
+			duoxuanKeyNum : paperInfoCondition.duoxuanKeyNum,
+			papernum : papernum
+		}
+	});
+}
+
+//判断store取值
+function panduanQuestionStoreInit() {
+	panduanQuestionStore.load({
+		params : {
+			isGeneratePaper:examPaperSub[curGradeComboIndex].isGeneratePaper,
+			problemlevel: paperInfoCondition.userlevel,
+			// subid: paperInfoCondition.subid,
+			subid : examPaperSub[curGradeComboIndex].subid,
+			panduanKeyNum : paperInfoCondition.panduanKeyNum,
+			papernum : papernum
+		}
+	});
+}
+/*// 当需要切换题目的时候后台获取题目danxuanStore
+function danxuanQuestionStoreInit() {
+	danxuanQuestionStore.load({
+		params : {
+			problemlevel: paperInfoCondition.userlevel,
+			subid: paperInfoCondition.subid,
+			danxuanKeyNum : paperInfoCondition.danxuanKeyNum,
+			papernum : papernum
+		}
+	});
+}*/
+
+// 当需要切换题目的时候后台获取题目danxuanStore
+function danxuanChangeProblem(record,flag) {
+	danxuanJsonArray = [];
+	// 普通题目
+	if(record.get("mustright") == '0' && record.get("keyproblem") == '0') {
+		for(var i=0; i<danxuanPutongProblemNumber; i++) {
+			danxuanJsonArray.push(danxuanQuestionStore.getAt(i).get("id"));
+		}
+		
+	} else if(record.get("mustright") == '1'){
+		// 必对题目
+		var start = danxuanPutongProblemNumber + Number(paperInfoCondition.danxuanKeyNum);
+		for(var i=start; i<totalDanxuanProblemNumber; i++) {
+			danxuanJsonArray.push(danxuanQuestionStore.getAt(i).get("id"));
+		}
+		
+	} else {
+		// 关键题目
+		var end = danxuanPutongProblemNumber + Number(paperInfoCondition.danxuanKeyNum);
+		for(var i=danxuanPutongProblemNumber; i<end; i++) {
+			danxuanJsonArray.push(danxuanQuestionStore.getAt(i).get("id"));
+		}
+	}
+	// 自动更换题目
+	if(flag == 0) {
+		ProblemDanXuanController.changeProblem(record.get("id"),record.get("problemlevel"),record.get("subidmark"),
+				record.get("mustright"),record.get("keyproblem"),papernum,danxuanJsonArray,function(data){
+			// 加载成功
+			if(data != null) {
+				data = eval(data);
+				
+				var tempRecord = danxuanQuestionStore.getAt(curRowIndex);
+				tempRecord.set("id", data.id);
+				tempRecord.set("question", data.question);
+				tempRecord.set("option1", data.option1);
+				tempRecord.set("option2", data.option2);
+				tempRecord.set("option3", data.option3);
+				tempRecord.set("option4", data.option4);
+				// tempRecord.commitChanges();
+				Ext.Msg.alert('提示', "更换题目成功!");
+			} else {
+				Ext.Msg.alert('提示', "更换题目出错或者数据库已经没有同类型的题目可以更换!");
+			}
+		});
+	} else {
+		// 手动更换题目
+		changeProblemByHanderStore.load({
+			params : {
+				curExamPanel : curExamPanel,
+				problemlevel: record.get("problemlevel"),
+				subid: record.get("subidmark"),
+				mustright : record.get("mustright"),
+				keyproblem : record.get("keyproblem"),
+				danxuanJsonArray :  danxuanJsonArray,
+				nameLike : nameLike
+			},callback: function(data) {
+				var changeLabel = " ：   单选题";
+				Ext.getCmp("statisticsLable").setText((Ext.getCmp("paperorder").getValue() + changeLabel));
+				changeProblemByHanderWindow.show();
+				if(changeProblemByHanderStore.getCount() == 0) {
+					Ext.Msg.alert('提示', "获取题目失败或者数据库已经没有选择的题目!");
+				} else {
+					
+				}
+			}
+		});
+	}
+}
+
+//当需要切换题目的时候后台获取题目danxuanStore
+function duoxuanChangeProblem(record,flag) {
+	duoxuanJsonArray = [];
+	// 普通题目
+	if(record.get("mustright") == "0" && record.get("keyproblem") == "0") {
+		for(var i=0; i<duoxuanPutongProblemNumber; i++) {
+			duoxuanJsonArray.push(duoxuanQuestionStore.getAt(i).get("id"));
+		}
+		
+	} else if(record.get("mustright") == "1"){
+		// 必对题目
+		var start = duoxuanPutongProblemNumber + Number(paperInfoCondition.duoxuanKeyNum);
+		for(var i=start; i<totalDuoxuanProblemNumber; i++) {
+			duoxuanJsonArray.push(duoxuanQuestionStore.getAt(i).get("id"));
+		}
+		
+	} else {
+		// 关键题目
+		var end = duoxuanPutongProblemNumber + Number(paperInfoCondition.duoxuanKeyNum);
+		for(var i=duoxuanPutongProblemNumber; i<end; i++) {
+			duoxuanJsonArray.push(duoxuanQuestionStore.getAt(i).get("id"));
+		}
+	}
+	if(flag == 0) {
+		ProblemDuoXuanController.changeProblem(record.get("id"),record.get("problemlevel"),examPaperSub[curGradeComboIndex].subid,
+				record.get("mustright"),record.get("keyproblem"),papernum,duoxuanJsonArray,function(data){
+			// 加载成功
+			if(data != null) {
+				data = eval(data);
+				
+				var tempRecord = duoxuanQuestionStore.getAt(curRowIndex);
+				tempRecord.set("id", data.id);
+				tempRecord.set("question", data.question);
+				tempRecord.set("option1", data.option1);
+				tempRecord.set("option2", data.option2);
+				tempRecord.set("option3", data.option3);
+				tempRecord.set("option4", data.option4);
+				Ext.Msg.alert('提示', "更换题目成功!");
+			} else {
+				Ext.Msg.alert('提示', "更换题目失败!");
+			}
+			duoxuanJsonArray = [];
+		});
+	} else {
+		// 手动更换题目
+		changeProblemByHanderStore.load({
+			params : {
+				curExamPanel : curExamPanel,
+				problemlevel: record.get("problemlevel"),
+				subid: examPaperSub[curGradeComboIndex].subid,
+				mustright : record.get("mustright"),
+				keyproblem : record.get("keyproblem"),
+				danxuanJsonArray :  duoxuanJsonArray,
+				nameLike : nameLike
+			},callback: function(data) {
+				var changeLabel = " ：   多选题";
+				Ext.getCmp("statisticsLable").setText((Ext.getCmp("paperorder").getValue() + changeLabel));
+				changeProblemByHanderWindow.show();
+				if(changeProblemByHanderStore.getCount() == 0) {
+					Ext.Msg.alert('提示', "获取题目失败或者数据库已经没有选择的题目!");
+				} else {
+					
+				}
+			}
+		});
+	}
+
+}
+
+//当需要切换题目的时候后台获取题目danxuanStore
+function panduanChangeProblem(record,flag) {
+	panduanJsonArray = [];
+	// 普通题目
+	if(record.get("mustright") == '0' && record.get("keyproblem") == '0') {
+		for(var i=0; i<panduanPutongProblemNumber; i++) {
+			panduanJsonArray.push(panduanQuestionStore.getAt(i).get("id"));
+		}
+		
+	} else if(record.get("mustright") == '1'){
+		// 必对题目
+		var start = panduanPutongProblemNumber + Number(paperInfoCondition.panduanKeyNum);
+		for(var i=start; i<totalPanduanProblemNumber; i++) {
+			panduanJsonArray.push(panduanQuestionStore.getAt(i).get("id"));
+		}
+		
+	} else {
+		// 关键题目
+		var end = panduanPutongProblemNumber + Number(paperInfoCondition.panduanKeyNum);
+		for(var i=panduanPutongProblemNumber; i<end; i++) {
+			panduanJsonArray.push(panduanQuestionStore.getAt(i).get("id"));
+		}
+	}
+	if(flag == 0) {
+		ProblemPanDuanController.changeProblem(record.get("id"),record.get("problemlevel"),record.get("subidmark"),
+				record.get("mustright"),record.get("keyproblem"),papernum,panduanJsonArray,function(data){
+			// 加载成功
+			if(data != null) {
+				data = eval(data);
+				
+				var tempRecord = panduanQuestionStore.getAt(curRowIndex);
+				tempRecord.set("id", data.id);
+				tempRecord.set("question", data.question);
+				Ext.Msg.alert('提示', "更换题目成功!");
+			} else {
+				Ext.Msg.alert('提示', "更换题目失败!");
+			}
+			panduanJsonArray = [];
+		});
+	} else {
+		// 手动更换题目
+		changeProblemByHanderStore.load({
+			params : {
+				curExamPanel : curExamPanel,
+				problemlevel: record.get("problemlevel"),
+				subid: record.get("subidmark"),
+				mustright : record.get("mustright"),
+				keyproblem : record.get("keyproblem"),
+				danxuanJsonArray :  panduanJsonArray,
+				nameLike : nameLike
+			},callback: function(data) {
+				var changeLabel = " ：   判断题";
+				Ext.getCmp("statisticsLable").setText((Ext.getCmp("paperorder").getValue() + changeLabel));
+				changeProblemByHanderWindow.show();
+				if(changeProblemByHanderStore.getCount() == 0) {
+					Ext.Msg.alert('提示', "获取题目失败或者数据库已经没有选择的题目!");
+				} else {
+					
+				}
+			}
+		});
+	}
+	
+}
+
+function loadAllQuestionStore() {
+ 	// 先获取单选
+	danxuanQuestionStore.load({
+		params : {
+			isGeneratePaper:examPaperSub[curGradeComboIndex].isGeneratePaper, // 用于判断是生成试卷还是读取试卷
+			problemlevel: paperInfoCondition.userlevel,
+			subid : examPaperSub[curGradeComboIndex].subid,
+			danxuanKeyNum : paperInfoCondition.danxuanKeyNum,
+			papernum : papernum
+		}, callback: function(data){
+			if(danxuanQuestionStore.getCount() == 0) {
+				Ext.Msg.alert('提示', "单选题生成失败!");
+			} else {
+				Ext.Msg.alert('提示', "单选题生成成功!");
+				duoxuanQuestionStore.load({
+					params : {
+						isGeneratePaper:examPaperSub[curGradeComboIndex].isGeneratePaper,
+						problemlevel: paperInfoCondition.userlevel,
+						// subid: paperInfoCondition.subid,
+						subid : examPaperSub[curGradeComboIndex].subid,
+						duoxuanKeyNum : paperInfoCondition.duoxuanKeyNum,
+						papernum : papernum
+					}, callback: function(data){
+						if(danxuanQuestionStore.getCount() == 0) {
+							Ext.Msg.alert('提示', "多选题生成失败!");
+						} else {
+							Ext.Msg.alert('提示', "多选题生成成功!");
+							panduanQuestionStore.load({
+								params : {
+									isGeneratePaper:examPaperSub[curGradeComboIndex].isGeneratePaper,
+									problemlevel: paperInfoCondition.userlevel,
+									// subid: paperInfoCondition.subid,
+									subid : examPaperSub[curGradeComboIndex].subid,
+									panduanKeyNum : paperInfoCondition.panduanKeyNum,
+									papernum : papernum
+								}, callback: function(data){
+									if(danxuanQuestionStore.getCount() == 0) {
+										Ext.Msg.alert('提示', "判断题生成失败!");
+									} else {
+										Ext.Msg.alert('提示', "判断题生成成功!");
+										Ext.Msg.alert('提示', "试卷生成成功!");
+										// 记录某个等级出卷成功
+								     	examPaperSub[curGradeComboIndex].isGeneratePaper = "1";
+								     	Ext.getCmp('generatePaperBtn').setDisabled(true);
+								     	//生成试卷成功则当前题库Store移除
+								     	subStore.removeAll(); 
+								     	//设置唯一题库名称
+								     	Ext.getCmp("cmpsubid").setValue(examPaperSub[curGradeComboIndex].subname);
+									}
+								}
+							});
+						}
+					}
+				});
+			}
+		}
+	});
+}
+
+// 保存考试时间基本信息
+function savePaperInfo() {
+	var params = {};
+	params.examname = paperInfoCondition.ExamName;
+	params.examdate = paperInfoCondition.ExamDate;
+	params.starttime = paperInfoCondition.startTime;
+	params.endtime = paperInfoCondition.endTime;
+	
+	TestPaperRecordController.savePaperInfo(params, function(data) {
+		if(data){
+			papernum = data;
+			isSavePaperInfo = true;
+			Ext.getCmp("modifyExamTimeBtn").setVisible(true);
+			loadAllQuestionStore();
+		}
+  	});
+}
+
+// 试卷已经生成，获取试卷信息
+function getAllQuestionStore() {
+	danxuanQuestionStoreInit();
+ 	duoxuanQuestionStoreInit();
+ 	panduanQuestionStoreInit();
+}
+
+// 初始记录单选题目的id，用于手动切换题目时候不会选择重复的题目
+function danxuanIdArrayInit() {
+	for (var i = 0; i < totalDanxuanProblemNumber; i++) {
+		danxuanIdArray[i] = danxuanQuestionStore.getAt(i).get("id");
+	}
+}
+//初始记录多选题目的id，用于手动切换题目时候不会选择重复的题目
+function duoxuanIdArrayInit() {
+	for (var i = 0; i < totalDuoxuanProblemNumber; i++) {
+		duoxuanIdArray[i] = duoxuanQuestionStore.getAt(i).get("id");
+	}
+}
+//初始记录判断题目的id，用于手动切换题目时候不会选择重复的题目
+function panduanIdArrayInit() {
+	for (var i = 0; i < totalPanduanProblemNumber; i++) {
+		panduanIdArray[i] = panduanQuestionStore.getAt(i).get("id");
+	}
+}
+
+// 初始化单选题、多选题、判断题id记录数组
+function idArrayInit() {
+	// 初始记录三种题目的数量
+	getTotalDanxuanProblemNumber();
+	getTotalDuoxuanProblemNumber();
+	getTotalPanduanProblemNumber();
+	// 初始化三种题目的id数组
+	danxuanIdArrayInit();
+	duoxuanIdArrayInit();
+	panduanIdArrayInit();
+}
+
+// 修改考试时间信息
+function modifyExamTime() {
+	if(paperGenerateInfoForm.getForm().isValid()){
+		var params = {};
+		paperInfoCondition = paperGenerateInfoForm.getForm().getValues();
+		params.examname = paperInfoCondition.ExamName;
+		params.examdate = paperInfoCondition.ExamDate;
+		params.starttime = paperInfoCondition.startTime;
+		params.endtime = paperInfoCondition.endTime;
+		params.papernum = papernum;
+		
+		TestPaperRecordController.modifyPaperInfo(params, function(data) {
+			if(data){
+				Ext.MessageBox.alert('提示',"修改试卷基本信息成功！");
+			} else {
+				Ext.MessageBox.alert('提示',"修改试卷基本信息失败！");
+			}
+	  	});
+	} else {
+		Ext.MessageBox.alert('提示',"请先填写考卷基本信息！");
+	}
+
+
+}
+
+// 生成考卷信息或者查看试卷信息
+function generateExamPaperByLevel() {
+	// 设置当前显示试卷名称
+	Ext.getCmp("paperorder").setValue(userlevelStore.getAt(curGradeComboIndex).get("userlevelname"));
+	
+	// 已经出卷，则是查看试卷
+	if(examPaperSub[curGradeComboIndex].isGeneratePaper == "1") {
+		// Store读取试卷信息
+		if(paperGenerateInfoForm.getForm().isValid()){
+			paperInfoCondition = paperGenerateInfoForm.getForm().getValues();
+		} else {
+			Ext.MessageBox.alert('提示',"请先填写考卷基本信息！");
+		}
+		
+		getAllQuestionStore();
+		return;
+	}
+	// 没有出卷，则生成考卷
+	if(paperGenerateInfoForm.getForm().isValid()){
+     	paperInfoCondition = paperGenerateInfoForm.getForm().getValues();
+     	examPaperSub[curGradeComboIndex].danxuanKeyNum = paperInfoCondition.danxuanKeyNum;
+     	examPaperSub[curGradeComboIndex].duoxuanKeyNum = paperInfoCondition.duoxuanKeyNum;
+     	examPaperSub[curGradeComboIndex].panduanKeyNum = paperInfoCondition.panduanKeyNum;
+     	examPaperSub[curGradeComboIndex].subid = subStore.getAt(curSubComboIndex).get("id");
+     	examPaperSub[curGradeComboIndex].subname = subStore.getAt(curSubComboIndex).get("subname");
+     	// 如果还没有考试的时间信息
+     	if(isSavePaperInfo == false) {
+     		savePaperInfo();
+     	} else {
+			loadAllQuestionStore();
+     	}
+     	isLoadNumberAndArray = false;
+     	
+     	// examPaperSub[curGradeComboIndex].isGeneratePaper = "1";
+     	// 记录试卷等级信息
+	}else{
+		Ext.MessageBox.alert('提示',"请先填写考卷基本信息！");
+	}
+}
+
+// 考试出卷填写基本信息
+var paperGenerateInfoForm = new Ext.form.FormPanel({
+	title : "考试基本信息",
+	region : "north",
+	frame : true,
+	height : 220,
+	labelAlign : 'left',
+	layout : 'column',
+	items : [ {
+		columnWidth : 0.3,
+		layout : 'form',
+		height : 150,
+		frame : true,
+		items : [{
+			xtype : 'textfield',
+			fieldLabel : '考试名称',
+			name : 'ExamName',
+			readOnly : false,
+			allowBlank : false,
+			value : "保密人员结业考试",
+			anchor : '98%'
+		},{
+		   xtype:'datefield',
+		   fieldLabel:'考试日期',
+		   name:'ExamDate',
+		   format:'Y-m-d',
+		   cls:"Wdate",
+		   allowBlank:false,
+		   style : "position:relative;top:2px;",
+		   anchor : '98%'
+		},{
+			  xtype:'timefield',
+			  fieldLabel:'开始时间',
+			  name:'startTime',
+			  format:'H:i',
+			  anchor:'98%',
+			  cls:"Wdate",
+			  minValue: '7:00',  
+		      maxValue: '21:00',
+			  allowBlank:false,
+			  listeners : {     
+	            select : function(combo, record, index){ 
+	            	Ext.getCmp("endTime").setValue(combo.value);
+	            	Ext.getCmp("endTime").setRangeValue(combo.value,'22:00');
+	            }
+	          }
+		},{
+	    	  xtype : 'timefield',
+	    	  fieldLabel : '结束时间',
+	    	  name : 'endTime',
+	    	  id : 'endTime',
+	    	  format : 'H:i',
+	    	  anchor : '98%',
+	    	  cls : "Wdate",
+	    	  allowBlank : false,
+		}, {
+			xtype : 'button',
+			id : 'modifyExamTimeBtn',
+			text : '修改信息',
+			style : "position:relative;top:5px;",
+			minWidth: 100,
+			hidden : true,
+			handler : modifyExamTime
+		}]
+	}, {
+		columnWidth : 0.3,
+		layout : 'form',
+		height : 150,
+		frame : true,
+		items : [{
+			  xtype:'numberfield',
+			  id:'danxuanKeyNum',
+			  fieldLabel:'单选关键题数',
+			  name:'danxuanKeyNum',
+			  value:'1',
+			  allowBlank: false,
+			  anchor : '98%',
+			  style : "position:relative;top:2px;",
+		},{
+			  xtype:'numberfield',
+			  id:'duoxuanKeyNum',
+			  fieldLabel:'多选关键题数',
+			  name:'duoxuanKeyNum',
+			  value:'1',
+			  allowBlank: false,
+			  anchor : '98%',
+			  style : "position:relative;top:2px;",
+		},{
+			  xtype:'numberfield',
+			  id:'panduanKeyNum',
+			  fieldLabel:'判断关键题数',
+			  name:'panduanKeyNum',
+			  value:'1',
+			  allowBlank: false,
+			  anchor : '98%',
+			  style : "position:relative;top:2px;",
+		}]
+	
+	}, {
+		columnWidth : 0.4,
+		layout : 'form',
+		height : 150,
+		frame : true,
+		items : [ {
+			xtype : 'combo',
+			fieldLabel : '涉密人员',
+			hiddenName : 'userlevel',
+			triggerAction : 'all',
+			store : userlevelStore,
+			displayField : 'userlevelname',
+			valueField : 'userlevel',
+			mode : 'local',
+			anchor : '80%',
+			editable : false,
+			allowBlank : false,
+			emptyText : '---请选择---',
+			listeners : {     
+	            select : function(combo, record, index){ 
+	            	lastGradeComboIndex = curGradeComboIndex;
+	            	curGradeComboIndex = index; //全部记录当前下拉框位置
+	            	// 下拉框改变了
+	            	if(curGradeComboIndex != lastGradeComboIndex) {
+	            		Ext.getCmp('generatePaperBtn').setDisabled(false); // 设置按钮为可操作
+	            	}
+	            	
+	            	// 判断当前等级是否已经出卷完毕，如果是则显示查看试卷
+	            	if(examPaperSub[index].isGeneratePaper == "1") {
+	            		subStore.removeAll();  
+	            		Ext.getCmp("cmpsubid").setValue(examPaperSub[index].subname);
+	            		Ext.getCmp("danxuanKeyNum").setValue(examPaperSub[index].danxuanKeyNum);
+	            		Ext.getCmp("duoxuanKeyNum").setValue(examPaperSub[index].duoxuanKeyNum);
+	            		Ext.getCmp("panduanKeyNum").setValue(examPaperSub[index].panduanKeyNum);
+	            		Ext.getCmp("generatePaperBtn").setText("查看试卷");
+	            	
+	            		return;
+	            	}
+	            	// 先清空，再获取
+	            	Ext.getCmp('cmpsubid').setValue("---请选择---");
+	            	Ext.getCmp("generatePaperBtn").setText("生成考卷");
+	            	subStore.removeAll();    
+	            	QuestionBankController.getSubList(combo.value, function(data) {
+	        			if(data){
+	        				// 加载数据
+	        				subStore.loadData(data);
+	        			}
+	        	  	});  
+	            }    
+	       }
+		}, {
+			xtype : 'combo',
+			fieldLabel : '选择题库',
+			id : 'cmpsubid',
+			hiddenName : 'subid',
+			triggerAction : 'all',
+			store : subStore,
+			displayField : 'subname',
+			valueField : 'id',
+			mode : 'local',
+			anchor : '80%',
+			editable : false,
+			allowBlank : false,
+			emptyText : '---请选择---',
+			listeners : { 
+				select : function(combo, record, index){ 
+					lastSubComboIndex = curSubComboIndex;
+					curSubComboIndex = index;
+					Ext.getCmp('generatePaperBtn').setDisabled(false);
+				}
+			}
+		}, {
+			xtype : 'button',
+			id : 'generatePaperBtn',
+			text : '生成考卷',
+			style : "position:relative;top:5px;",
+			minWidth: 100,
+			handler : generateExamPaperByLevel
+		}]
+	},{
+		columnWidth : 1.0,
+		layout : 'form',
+		height : 40,
+		frame : true,
+		items : [ {
+			xtype : 'displayfield',
+			fieldLabel : '当前试卷',
+			id : 'paperorder',
+			labelWidth : 70,
+			labelSeparator : "：",
+			style:"position:relative;top:2px;",
+			value : ""
+		}]
+	}]
+});
+
+function merge_problem(val, x ,store) {
+	return '<b>' + val + '</b>' +
+			'<br>' + '&nbsp;&nbsp;&nbsp;A. ' +store.data.option1 + 
+			'<br>' + '&nbsp;&nbsp;&nbsp;B. ' +store.data.option2 + 
+			'<br>' + '&nbsp;&nbsp;&nbsp;C. ' +store.data.option3 + 
+			'<br>' + '&nbsp;&nbsp;&nbsp;D. ' +store.data.option4 + 
+			'<br>' + 
+			'<br>';
+}
+
+function panduan_problem(val, x , store) {
+	return '<b>' + val + '</b>' +
+	'<br>' + '&nbsp;&nbsp;&nbsp;A. ' + '正确' + 
+	'<br>' + '&nbsp;&nbsp;&nbsp;B. ' + '错误' + 
+	'<br>' + 
+	'<br>';
+}
+
+function problemType(val, x , store) {
+	var str = '<br><b>';
+	if(store.data.mustright == '1') {
+		str += '必对题' + '<br>';
+	} else if(store.data.keyproblem == '1') {
+		str += '关键题' + '<br>';
+	} else {
+		str += '普通题' + '<br>';
+	}
+	return str;
+}
+
+function problem_juzhong(val, x , store) {
+	if(curExamPanel ==0 || curExamPanel ==1) {
+		return merge_problem(val, x , store);
+	} else {
+		return panduan_problem(val, x , store);
+	}
+}
+
+var danxuanProblemGrid = new Ext.grid.GridPanel({
+	region : 'center',
+	id : 'danxuanProblemGrid',
+	store : danxuanQuestionStore,
+	loadMask : true,
+	width : 5000,
+	stripeRows : true,
+	autoScroll : true,
+	viewConfig : {
+		sortDescText : '降序',
+		sortAscText : '升序',
+		columnsText : '显示列',
+		forceFit : false
+	},
+	columns : [ new Ext.grid.RowNumberer({
+		width : 28
+	}), {
+		id : 'problemlevel',
+		header : '类型',
+		dataIndex : 'problemlevel',
+		width : 180,
+		sortable : true,
+		hidden : true
+	}, {
+		id : 'question',
+		header : '单 选 题  目',
+		dataIndex : 'question',
+		width : 700,
+		sortable : true,
+		renderer : merge_problem
+	}, {
+		id : 'option1',
+		header : '选  项  1',
+		dataIndex : 'option1',
+		width : 150,
+		sortable : true,
+		hidden : true
+	}, {
+		id : 'option2',
+		header : '选  项  2',
+		dataIndex : 'option2',
+		width : 150,
+		sortable : true,
+		hidden : true
+	}, {
+		id : 'option3',
+		header : '选  项  3',
+		dataIndex : 'option3',
+		width : 150,
+		sortable : true,
+		hidden : true
+	}, {
+		id : 'option4',
+		header : '选  项  4',
+		dataIndex : 'option4',
+		width : 150,
+		sortable : true,
+		hidden : true
+	}, {
+		id : 'mustright',
+		header : '题目类型',
+		dataIndex : 'mustright',
+		width : 80,
+		sortable : true,
+		renderer : problemType
+	}, {
+		id : 'keyproblem',
+		header : '关 键 题',
+		dataIndex : 'keyproblem',
+		width : 80,
+		sortable : true,
+		hidden : true
+	}],
+	listeners : {
+		rowdblclick : function(grid) {
+			if (grid.getSelectionModel().hasSelection()) {
+				instructorInfoWinInit("编辑单选题信息").show();
+				college_instructorbasicform.getForm().setValues(
+						grid.getSelectionModel().getSelected().data);
+			} else {
+				Ext.MessageBox.alert('提示', "请选择一条信息进行编辑!");
+			}
+
+		}
+	}
+});
+
+
+var duoxuanProblemGrid = new Ext.grid.GridPanel({
+	region : 'center',
+	id : 'duoxuanProblemGrid',
+	store : duoxuanQuestionStore,
+	loadMask : true,
+	width : 5000,
+	stripeRows : true,
+	autoScroll : true,
+	viewConfig : {
+		sortDescText : '降序',
+		sortAscText : '升序',
+		columnsText : '显示列',
+		forceFit : false
+	},
+	columns : [ new Ext.grid.RowNumberer({
+		width : 28
+	}), {
+		id : 'problemlevel',
+		header : '类型',
+		dataIndex : 'problemlevel',
+		width : 180,
+		sortable : true,
+		hidden : true
+	}, {
+		id : 'question',
+		header : '多 选 题  目',
+		dataIndex : 'question',
+		width : 700,
+		sortable : true,
+		renderer : merge_problem
+	}, {
+		id : 'option1',
+		header : '选  项  1',
+		dataIndex : 'option1',
+		width : 150,
+		sortable : true,
+		hidden : true
+	}, {
+		id : 'option2',
+		header : '选  项  2',
+		dataIndex : 'option2',
+		width : 150,
+		sortable : true,
+		hidden : true
+	}, {
+		id : 'option3',
+		header : '选  项  3',
+		dataIndex : 'option3',
+		width : 150,
+		sortable : true,
+		hidden : true
+	}, {
+		id : 'option4',
+		header : '选  项  4',
+		dataIndex : 'option4',
+		width : 150,
+		sortable : true,
+		hidden : true
+	}, {
+		id : 'mustright',
+		header : '题目类型',
+		dataIndex : 'mustright',
+		width : 80,
+		sortable : true,
+		renderer : problemType
+	}, {
+		id : 'keyproblem',
+		header : '关 键 题',
+		dataIndex : 'keyproblem',
+		width : 80,
+		sortable : true,
+		hidden : true
+	}, {
+		id : 'subid',
+		header : '题库',
+		dataIndex : 'subid',
+		width : 80,
+		sortable : true,
+		hidden : true
+	}],
+	listeners : {
+		rowdblclick : function(grid) {
+			if (grid.getSelectionModel().hasSelection()) {
+				instructorInfoWinInit("编辑多选题信息").show();
+				college_instructorbasicform.getForm().setValues(
+						grid.getSelectionModel().getSelected().data);
+			} else {
+				Ext.MessageBox.alert('提示', "请选择一条信息进行编辑!");
+			}
+
+		}
+	}
+});
+
+
+var panduanProblemGrid = new Ext.grid.GridPanel({
+	region : 'center',
+	id : 'panduanProblemGrid',
+	store : panduanQuestionStore,
+	loadMask : true,
+	width : 5000,
+	stripeRows : true,
+	autoScroll : true,
+	viewConfig : {
+		sortDescText : '降序',
+		sortAscText : '升序',
+		columnsText : '显示列',
+		forceFit : false
+	},
+	columns : [ new Ext.grid.RowNumberer({
+		width : 28
+	}), {
+		id : 'problemlevel',
+		header : '类型',
+		dataIndex : 'problemlevel',
+		width : 180,
+		sortable : true,
+		hidden : true
+	}, {
+		id : 'question',
+		header : '判  断  题  目',
+		dataIndex : 'question',
+		width : 700,
+		sortable : true,
+		renderer : panduan_problem
+	}, {
+		id : 'mustright',
+		header : '题目类型',
+		dataIndex : 'mustright',
+		width : 80,
+		sortable : true,
+		renderer : problemType
+	}, {
+		id : 'keyproblem',
+		header : '关 键 题',
+		dataIndex : 'keyproblem',
+		width : 80,
+		sortable : true,
+		hidden : true
+	}, {
+		id : 'subid',
+		header : '题库',
+		dataIndex : 'subid',
+		width : 80,
+		sortable : true,
+		hidden : true
+	}],
+	listeners : {
+		rowdblclick : function(grid) {
+			if (grid.getSelectionModel().hasSelection()) {
+				instructorInfoWinInit("编辑判断题信息").show();
+				college_instructorbasicform.getForm().setValues(
+						grid.getSelectionModel().getSelected().data);
+			} else {
+				Ext.MessageBox.alert('提示', "请选择一条信息进行编辑!");
+			}
+
+		}
+	}
+});
+// 模糊查询醍醐Store调用
+function instructor_search() {
+	var tempRecord;
+	var jsonArray = [];
+	nameLike = Ext.getCmp("nameLike").getValue();
+	if(curExamPanel == 0) {
+		tempRecord = danxuanQuestionStore.getAt(curRowIndex);
+		jsonArray = danxuanJsonArray;
+	} else if(curExamPanel == 1) {
+		tempRecord = duoxuanQuestionStore.getAt(curRowIndex);
+		jsonArray = duoxuanJsonArray;
+	} else {
+		tempRecord = panduanQuestionStore.getAt(curRowIndex);
+		jsonArray = panduanJsonArray;
+	}
+	
+	changeProblemByHanderStore.load({
+		params : {
+			curExamPanel : curExamPanel,
+			problemlevel: tempRecord.get("problemlevel"),
+			subid: tempRecord.get("subidmark"),
+			mustright : tempRecord.get("mustright"),
+			keyproblem : tempRecord.get("keyproblem"),
+			danxuanJsonArray :  jsonArray,
+			nameLike : nameLike
+		}, callback: function(data){
+			if(changeProblemByHanderStore.getCount() == 0) {
+				Ext.Msg.alert('提示', "没有属于同类型并符合查询条件的题目!");
+			} else {
+				
+			}
+		}
+	});
+	nameLike = "";
+}
+
+// 模糊查询题目窗口
+var instructor_searchform = new Ext.form.FormPanel({
+	id : 'instructor_searchform',
+	region : 'center',
+	frame : true,
+	labelWidth : 68,
+	height : 100,
+	items : [{
+			columnWidth : .5,
+			layout : 'form',
+			items : [ {
+				xtype : 'textfield',
+				fieldLabel : '题  目',
+				id : 'nameLike',
+				anchor : '96%'
+			} ]
+		}],
+	keys : [ {
+		key : 13,// 回车
+		fn : function() {
+			instructor_search();
+			instructor_searchWin.hide();
+		}
+	} ]
+});
+
+var instructor_searchWin = new Ext.Window({
+	title : '按题目模糊查询',
+	width : 500,
+	autoHeight : true,
+	minWidth : 300,
+	minHeight : 200,
+	closeAction : 'hide',
+	layout : 'fit',
+	plain : true,
+	buttonAlign : 'center',
+	items : [ instructor_searchform ],
+	modal : true,
+	shadow : true,
+	buttons : [ {
+		text : '查询',
+		handler : function() {
+			instructor_search();
+			instructor_searchWin.hide();
+		}
+	}, {
+		text : '清空',
+		handler : function() {
+			instructor_searchform.getForm().reset();
+		}
+	}, {
+		text : '关闭',
+		handler : function() {
+			instructor_searchWin.hide();
+		}
+	} ]
+});
+
+var statisticsByCampusGrid = new Ext.grid.GridPanel({
+	id : 'statisticsByCampusGrid',
+	store : changeProblemByHanderStore,
+	title : '选择更改题目',
+	loadMask :true,
+	stripeRows :true,
+	autoScroll:true,
+	autoExpandColumn : 'question',
+	viewConfig: {sortDescText: '降序',sortAscText: '升序',columnsText: '显示列',forceFit:false},
+	columns : [new Ext.grid.RowNumberer({
+		width : 28
+	}), {
+		id :'question',
+		header : '题目',
+	  	dataIndex :'question',
+	  	width :100,
+	 	sortable :true,
+	 	renderer : problem_juzhong
+	}, {
+		id : 'option1',
+		header : '选  项  1',
+		dataIndex : 'option1',
+		width : 150,
+		sortable : true,
+		hidden : true
+	}, {
+		id : 'option2',
+		header : '选  项  2',
+		dataIndex : 'option2',
+		width : 150,
+		sortable : true,
+		hidden : true
+	}, {
+		id : 'option3',
+		header : '选  项  3',
+		dataIndex : 'option3',
+		width : 150,
+		sortable : true,
+		hidden : true
+	}, {
+		id : 'option4',
+		header : '选  项  4',
+		dataIndex : 'option4',
+		width : 150,
+		sortable : true,
+		hidden : true
+	}],
+	tbar : [ {
+		text : '按题目模糊查询',
+		iconCls : 'upload-icon',
+		scope : this,
+		handler : function() {
+			instructor_searchWin.show();
+			instructor_searchform.getForm().reset();
+		}
+	},'->',statisticsLable],
+	listeners : {
+		rowdblclick : function(grid) {
+			var selections = statisticsByCampusGrid.getSelectionModel().getSelections();
+		
+			if (selections.length == 0) {
+				Ext.MessageBox.alert('提示', "请选择一条题目信息!");
+			} else {
+				var record = selections[0];
+				Ext.MessageBox.confirm("确认框", "确定用这道题目来替换吗？，替换后将不能回退！", function(btn){
+					if(btn == 'yes') {
+						// 进行更改题目更改
+						ProblemDanXuanController.saveChangeProblemByHander(curExamPanel,papernum,record.get("problemlevel"),curRowProblemId,record.get("id"),
+								function(data) {
+							if(data) {
+								if(curExamPanel == 0) {
+									var tempRecord = danxuanQuestionStore.getAt(curRowIndex);
+									tempRecord.set("id", record.get("id"));
+									tempRecord.set("question", record.get("question"));
+									tempRecord.set("option1", record.get("option1"));
+									tempRecord.set("option2", record.get("option2"));
+									tempRecord.set("option3", record.get("option3"));
+									tempRecord.set("option4", record.get("option4"));
+								} else if(curExamPanel == 1) {
+									var tempRecord = duoxuanQuestionStore.getAt(curRowIndex);
+									tempRecord.set("id", record.get("id"));
+									tempRecord.set("question", record.get("question"));
+									tempRecord.set("option1", record.get("option1"));
+									tempRecord.set("option2", record.get("option2"));
+									tempRecord.set("option3", record.get("option3"));
+									tempRecord.set("option4", record.get("option4"));
+								} else {
+									var tempRecord = panduanQuestionStore.getAt(curRowIndex);
+									tempRecord.set("id", record.get("id"));
+									tempRecord.set("question", record.get("question"));
+								}
+								changeProblemByHanderWindow.hide();
+								Ext.Msg.alert('提示', "更换题目成功!");								
+							}
+						});
+					} else {
+						return;
+					}
+				});
+			}
+
+		}
+	}
+});
+
+// 手动更改题目窗口
+var changeProblemByHanderWindow = new Ext.Window({
+	title: '更改题目(双击更改题目)',
+	width: 800,
+	height: 600,
+	closeAction: 'hide',
+	layout: 'fit',
+	bodyStyle  : 'position:relative',
+	modal: true,
+	shadow: true,
+	hideMode : Ext.isIE ? 'offsets' : 'display',
+	plain : true,
+	bodyStyle : 'padding:5px;',
+	buttonAlign : 'center',
+	items : [statisticsByCampusGrid]
+});
+
+// 右键弹出菜单
+var contextmenu = new Ext.menu.Menu({
+	id : 'theContextMenu',
+	items : [{
+				text : '自动更换题目',
+				iconCls : 'edit',
+				handler : function() {
+					var selections;
+					if(curExamPanel == 0) {
+						selections = danxuanProblemGrid.getSelectionModel().getSelections();
+					} else if(curExamPanel == 1) {
+						selections = duoxuanProblemGrid.getSelectionModel().getSelections();
+					} else {
+						selections = panduanProblemGrid.getSelectionModel().getSelections();
+					}
+					
+					if (selections.length == 0) {
+						Ext.Msg.alert('提示', "先选择具体题目!");
+						return;
+					}
+					for (var i=0; i<selections.length; i++) {
+						var record = selections[i];
+						Ext.MessageBox.confirm("确认框", "确定需要变换选择的题目吗，修改后将不能回退！", function(btn){
+							if(btn == 'yes') {
+								// 调用方法获取题目，进行更改
+								if(curExamPanel == 0) {
+									danxuanChangeProblem(record,0);
+								} else if(curExamPanel == 1) {
+									duoxuanChangeProblem(record,0);
+								} else {
+									panduanChangeProblem(record,0);
+								}
+							} else {
+								return;
+							}
+						});
+					}
+				}
+			}, {
+				text : '手动更换题目',
+				iconCls : 'edit',
+				handler : function() { // 空方法
+					var selections;
+					if(curExamPanel == 0) {
+						selections = danxuanProblemGrid.getSelectionModel().getSelections();
+					} else if(curExamPanel == 1) {
+						selections = duoxuanProblemGrid.getSelectionModel().getSelections();
+					} else {
+						selections = panduanProblemGrid.getSelectionModel().getSelections();
+					}
+					
+					var record = selections[0];
+					if(curExamPanel == 0) {
+						danxuanChangeProblem(record,1);
+					} else if(curExamPanel == 1) {
+						duoxuanChangeProblem(record,1);
+					} else {
+						panduanChangeProblem(record,1);
+					}							
+						
+				}
+			}
+	]
+});
+
+function addExamPaperProblem(panel) {
+	tabPanel = Ext.getCmp('centerTabPanel');
+	tabPanel.add(panel);
+	tabPanel.doLayout(true, true);
+	tabPanel.show();
+	tabPanel.setActiveTab("danxuan");
+}
+
+// 具体考试考卷panel
+var danxuanPanel = new Ext.Panel({
+	id : "danxuan",
+	title : "单选题",
+	layout : 'column',
+	width : 300,
+	items : [ danxuanProblemGrid]
+});
+
+var duoxuanPanel = new Ext.Panel({
+	id : "duoxuan",
+	title : "多选题",
+	layout : 'column',
+	height : 5000,
+	width : 300,
+	items : [ duoxuanProblemGrid]
+});
+
+var panduanPanel = new Ext.Panel({
+	id : "panduan",
+	title : "判断题",
+	layout : 'column',
+	height : 5000,
+	width : 300,
+	items : [ panduanProblemGrid]
+});
+
+danxuanProblemGrid.on("rowcontextmenu", function(danxuanProblemGrid, rowIndex, e){
+    // 是否已经初始化信息
+	if(isLoadNumberAndArray == false) {
+		isLoadNumberAndArray = true;
+		idArrayInit();
+    }
+	curRowIndex = rowIndex;
+	curRowProblemId = danxuanQuestionStore.getAt(curRowIndex).get("id");
+	curExamPanel = 0;
+	e.preventDefault(); // 阻止事件的传递
+    danxuanProblemGrid.getSelectionModel().selectRow(rowIndex);
+    contextmenu.showAt(e.getXY()); // 菜单的生成位置
+   
+});
+
+duoxuanProblemGrid.on("rowcontextmenu", function(duoxuanProblemGrid, rowIndex, e){
+    // 是否已经初始化信息
+	if(isLoadNumberAndArray == false) {
+		isLoadNumberAndArray = true;
+		idArrayInit();
+    }
+	curRowIndex = rowIndex;
+	curRowProblemId = duoxuanQuestionStore.getAt(curRowIndex).get("id");
+	curExamPanel = 1;
+	e.preventDefault(); // 阻止事件的传递
+    danxuanProblemGrid.getSelectionModel().selectRow(rowIndex);
+    contextmenu.showAt(e.getXY()); // 菜单的生成位置
+   
+});
+
+panduanProblemGrid.on("rowcontextmenu", function(panduanProblemGrid, rowIndex, e){
+    // 是否已经初始化信息
+	if(isLoadNumberAndArray == false) {
+		isLoadNumberAndArray = true;
+		idArrayInit();
+    }
+	curRowIndex = rowIndex;
+	curRowProblemId = panduanQuestionStore.getAt(curRowIndex).get("id");
+	curExamPanel = 2;
+	e.preventDefault(); // 阻止事件的传递
+	panduanProblemGrid.getSelectionModel().selectRow(rowIndex);
+    contextmenu.showAt(e.getXY()); // 菜单的生成位置
+   
+});
+
+var examPaperPanel = new Ext.TabPanel({
+	id : "centerTabPanel",
+	title : "试卷具体内容",
+	region : 'center', // a center region is ALWAYS required for border layout
+	deferredRender : false,
+	activeTab : 0, // first tab initially active
+	resizeTabs : true,
+	layoutOnTabChange : true,
+	defaults : {
+		autoScroll : true
+	},
+	items : [],
+
+	initEvents : function() {
+		Ext.TabPanel.superclass.initEvents.call(this);
+		this.on('add', this.onAdd, this, {
+			target : this
+		});
+		this.on('remove', this.onRemove, this, {
+			target : this
+		});
+		this.mon(this.strip, 'mousedown', this.onStripMouseDown, this);
+		this.mon(this.strip, 'contextmenu', this.onStripContextMenu, this);
+		if (this.enableTabScroll) {
+			this.mon(this.strip, 'mousewheel', this.onWheel, this);
+		}
+		this.mon(this.strip, 'dblclick', this.onTitleDbClick, this);
+	},
+	onTitleDbClick : function(e, target, o) {
+		var t = this.findTargets(e);
+		if (t.item.fireEvent('beforeclose', t.item) !== false) {
+			t.item.fireEvent('close', t.item);
+			this.remove(t.item);
+		}
+	}
+});
+
+// 记录本次出卷等级个数以及选择题库信息
+function InitExamPaperSub() {
+	for(var i=0; i<userlevelStore.getCount(); i++) {
+		var paper = {};
+		paper.isGeneratePaper = "0"; // 记录是否已经出卷0表示未出卷，1表示已经出卷
+		paper.danxuanKeyNum = -1;
+		paper.duoxuanKeyNum = -1;
+		paper.panduanKeyNum = -1;
+		paper.subid = -1;
+		paper.subname = "";
+		
+		examPaperSub.push(paper);
+	}	
+}
+
+function WindowInit(){
+	// 获取涉密人员等级List信息
+	UserController.getUserLevelList(function(data){
+			if(data){
+				// 加载数据
+				userlevelStore.loadData(data);
+				InitExamPaperSub();
+			}
+	  	});
+}
+
+// 窗口初始化
+function generateExamPaperInit() {
+	new Ext.Viewport({
+		layout : 'border', // 表格布局
+		id : 'mainpanel',
+		bodyPadding : 5,
+		hideMode : Ext.isIE ? 'offsets' : 'display',	
+		items : [ paperGenerateInfoForm, examPaperPanel],
+		renderTo : Ext.getBody()
+	});
+	WindowInit();
+	
+	addExamPaperProblem(danxuanPanel);
+	addExamPaperProblem(duoxuanPanel);
+	addExamPaperProblem(panduanPanel);
+}

@@ -1,0 +1,13 @@
+package com.egov.secrecysystem.service;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.egov.secrecysystem.dao.CpUserDao;
+
+@Service
+public class CpUserService {
+	@Autowired
+	private CpUserDao cpUserDao;
+
+}

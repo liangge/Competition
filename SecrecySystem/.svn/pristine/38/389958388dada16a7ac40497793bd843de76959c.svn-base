@@ -1,0 +1,57 @@
+package com.egov.secrecysystem.dao;
+
+import java.util.List;
+
+import org.hibernate.Query;
+
+import com.egov.secrecysystem.model.CpUser;
+import com.egov.secrecysystem.model.SeUser;
+
+public class CpUserDao extends AbstractHibernateDao<CpUser>{
+	
+	CpUserDao() {
+		super(CpUser.class);
+	}
+
+	//返回用户
+		public CpUser getRoleByLoginName(String loginName) {
+			String hql = "select e from com.egov.secrecysystem.model.CpUser e where e.loginname=:loginName";
+			Query query = this.getCurrentSession().createQuery(hql);
+			query.setParameter("loginName", loginName);
+			List<CpUser> result = query.list();
+			if (result.size() == 1)
+				return result.get(0);
+			return null;
+		}
+	
+	/**
+	 * @author LiangGe
+	 * @return
+	 * 获取当前所有选手信息
+	 */
+	public List<CpUser> getUserInfo() {
+		String hql = "select e from com.egov.secrecysystem.model.CpUser e where e.loginname!=:loginName";
+		return this.getCurrentSession().createQuery(hql).setParameter("loginName", "admin").list();
+	}
+	
+
+	/**
+	 * @author LiangGe
+	 * @param name
+	 * @param password
+	 * @return 用户存在返回ok
+	 * 验证用户登录
+	 */
+	public String validateLogin(String name, String password) {
+		String hql = "from com.egov.secrecysystem.model.CpUser e where e.loginname=:Name and e.passwd=:Password";
+		Query query = this.getCurrentSession().createQuery(hql);
+		query.setParameter("Name", name);
+		query.setParameter("Password", password);
+		List<SeUser> result = query.list();
+		if (result.size() != 1)
+			return null;
+		else
+			return "ok";
+	}
+	
+}

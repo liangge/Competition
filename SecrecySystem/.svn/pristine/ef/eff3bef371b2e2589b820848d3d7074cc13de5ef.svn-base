@@ -1,0 +1,298 @@
+package com.egov.secrecysystem.service;
+
+import java.util.List;
+import java.util.Map;
+
+import com.egov.secrecysystem.model.SeUser;
+import com.egov.secrecysystem.utility.Md5;
+
+import org.json.simple.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.egov.secrecysystem.dao.RoleDao;
+import com.egov.secrecysystem.dao.UserDao;
+//import cn.hdu.examsignup.dao.InstitutionDao;
+//import org.resource.model.ExInstitution;
+
+/**
+ * @author LiangGe
+ *
+ */
+/**
+ * @author LiangGe
+ *
+ */
+@Service
+@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+public class UserService {
+
+	@Autowired
+	private UserDao userDao;
+
+	@Autowired
+	private RoleDao roledao;
+
+	// 验证登陆
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public String validateLogin(String name, String password) {
+		String temp = this.userDao.validateLogin(name, password);
+		return temp;
+	}
+
+	// 通过登录名得到用户
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public SeUser getRoleByLoginName(String loginName) {
+		return this.userDao.getRoleByLoginName(loginName);
+	}
+
+	// 通过登录名得到角色等级
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public Integer getRoleLevelByLoginName(String loginName) {
+		return userDao.getRoleLevelByLoginName(loginName);
+	}
+
+	// 返回显示页面
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public List<Map> getPageInstructors(String whereString,
+			Map<String, Object> valuesMap, String pageNum, String pageSize) {
+		try {
+			return userDao.getPageInstructors(whereString, valuesMap,
+					Integer.parseInt(pageNum), Integer.parseInt(pageSize));
+		} catch (Exception e) {
+			System.out.println("getPageInstructors error");
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	// 得到表中的总记录数
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public long getInstructorsTotalCount(String whereString,
+			Map<String, Object> valuesMap) {
+		try {
+			return userDao.getInstructorsTotalCount(whereString, valuesMap);
+		} catch (Exception e) {
+			System.out.println("getInstructorsTotalCount error");
+			e.printStackTrace();
+			return 0;
+		}
+	}
+
+	// 更新用户信息
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = false)
+	public String updateInstructorAllInfo(JSONObject instructor) {
+
+		if (instructor.get("id").toString().equals("")) {
+			return this.saveInstructor(instructor);
+		} else {
+			try {
+				String result = "";
+				SeUser entity = userDao.findById(instructor.get("id")
+						.toString());
+				if (entity.getSeAnswerRecordDanXuans().size() >= 1
+						|| entity.getSeAnswerRecordDuoXuans().size() >= 1
+						|| entity.getSeAnswerRecordPanDuans().size() >= 1
+						|| entity.getSeScoreRecords().size() >= 1) {				
+					result = "falure";
+				} 
+				else {
+					entity.setName(instructor.get("name").toString());
+					entity.setLoginname(instructor.get("loginname").toString());
+					entity.setPassword(instructor.get("password").toString());
+					entity.setUserlevel(instructor.get("userlevel").toString());
+					entity.setRemark(instructor.get("remark").toString());
+					/*if (instructor.get("score").equals("")) {
+						entity.setScore(null);
+					} else {
+						entity.setScore(Integer.parseInt(instructor
+								.get("score").toString()));
+					}*/
+					userDao.update(entity);
+					result = "success";
+				}
+
+				return result;
+			} catch (Exception e) {
+				e.printStackTrace();
+				return "error";
+			}
+		}
+	}
+
+	private Md5 Md5() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	// 保存用户信息
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = false)
+	public String saveInstructor(JSONObject instructor) {
+
+		try {
+
+			SeUser entity = new SeUser();
+			String str = instructor.get("password").toString();
+			Md5 md5Encrypt = new Md5();
+			String password = md5Encrypt.md5(str);
+			entity.setName(instructor.get("name").toString());
+			entity.setLoginname(instructor.get("loginname").toString());
+			entity.setPassword(password);
+			entity.setUserlevel(instructor.get("userlevel").toString());
+			entity.setRemark(instructor.get("remark").toString());
+			/*if (instructor.get("score").equals("")) {
+				entity.setScore(null);
+			} else {
+				entity.setScore(Integer.parseInt(instructor.get("score")
+						.toString()));
+
+			}*/
+			userDao.save(entity);
+			return "success";
+		} catch (Exception e) {
+			e.printStackTrace();
+			return "error";
+		}
+	}
+
+	// 删除用户
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = false)
+	public String deleteInstructors(List<String> ids) {
+		String result = "";
+		try {
+			for (String id : ids) {
+				SeUser entity = userDao.findById(id);
+				if (entity.getSeAnswerRecordDanXuans().size() >= 1
+						|| entity.getSeAnswerRecordDuoXuans().size() >= 1
+						|| entity.getSeAnswerRecordPanDuans().size() >= 1
+						|| entity.getSeScoreRecords().size() >= 1) {
+					result = "falure";
+				} else {
+
+					userDao.delete(entity);
+					result = "success";
+				}
+			}
+			return result;
+		} catch (Exception e) {
+			System.out.println("deleteInstructors error");
+			e.printStackTrace();
+			return "error";
+		}
+	}
+
+	// 核查用户信息
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public String checkInstructorsData(List<JSONObject> instructors) {
+		try {
+			int instructorcount = 1;
+			for (JSONObject instructor : instructors) {
+				instructorcount++;
+			}
+			return null;
+		} catch (Exception e) {
+			return e.getMessage();
+		}
+
+	}
+
+	// 导入用户信息
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = false)
+	public boolean importInstructors(List<JSONObject> instructors) {
+		try {
+			int instructorcount = 0;
+			SeUser entity;
+			for (JSONObject instructor : instructors) {
+				entity = new SeUser();
+				String str = instructor.get("password").toString();
+				Md5 md5Encrypt = new Md5();
+				String password = md5Encrypt.md5(str);
+				entity.setName(instructor.get("name").toString());
+				entity.setLoginname(instructor.get("loginname").toString());
+				entity.setPassword(password);
+				entity.setUserlevel(instructor.get("userlevel").toString());
+				entity.setRemark(instructor.get("remark").toString());
+				/*if (instructor.get("score").equals("")) {
+					entity.setScore(null);
+				} else {
+					entity.setScore(Integer.parseInt(instructor.get("score")
+							.toString()));
+				}*/
+
+				userDao.save(entity);
+				if (instructorcount % 50 == 0) {
+					userDao.getSession().flush();
+					userDao.getSession().clear();
+				}
+				instructorcount++;
+			}
+			return true;
+		} catch (Exception e) {
+			System.out.println("importInstructors error");
+			e.printStackTrace();
+			userDao.getSession().getTransaction().rollback();
+			return false;
+		}
+	}
+
+	// 批量导出用户信息
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public List<Map> getInstructorsInfoExcel() {
+		try {
+			return userDao.getInstructorsInfoExcel();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	// 通过loginname得到登陆密码
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public String getRolePassword(String loginName) {
+		return this.userDao.getRolePassword(loginName);
+	}
+
+	// 通过用户名设置密码
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = false)
+	public boolean setRolePassword(String loginName, String password) {
+		return this.userDao.setRolePassword(loginName, password);
+	}
+
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public List<Map> getDepartList() {
+		try {
+			List<Map> departList = userDao.getDepartList();
+			/*
+			 * for(Map element : languageList) { String language =
+			 * element.get("languagenum") + "," + element.get("languagename");
+			 * element.put("languagename", language); }
+			 */
+			return departList;
+		} catch (Exception e) {
+			System.out.println("getDepartList error!" + e.getMessage());
+			return null;
+		}
+	}
+	
+	/**
+	 * @author LiangGe
+	 * @return
+	 */
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public List<Map> getUserLevelList() {
+		try {
+			List<Map> userLevelList = userDao.getUserLevelList();
+			for (Map element : userLevelList) {
+				String userlevelname = element.get("userlevel") + "级保密人员";
+				element.put("userlevelname", userlevelname);
+			}
+			return userLevelList;
+		} catch (Exception e) {
+			System.out.println("getUserLevelList error!" + e.getMessage());
+			return null;
+		}
+	}
+	
+}

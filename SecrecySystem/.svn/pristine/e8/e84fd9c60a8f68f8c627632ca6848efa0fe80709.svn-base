@@ -1,0 +1,108 @@
+package com.egov.secrecysystem.service;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.directwebremoting.WebContextFactory;
+import org.json.simple.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.egov.secrecysystem.dao.CpAnswerRecordDao;
+import com.egov.secrecysystem.dao.CpTestpaperRecordDao;
+import com.egov.secrecysystem.dao.CpUserDao;
+import com.egov.secrecysystem.model.CpAnswerRecord;
+import com.egov.secrecysystem.model.CpUser;
+
+@Service
+public class CpAnswerRecordService {
+	@Autowired
+	private CpAnswerRecordDao cpAnswerRecordDao;
+	@Autowired
+	private CpUserDao cpUserDao;
+	@Autowired
+	private CpTestpaperRecordDao cpTestpaperRecordDao;
+
+	/**
+	 * @author LiangGe
+	 * @return 
+	 * 获取所有选手当前答题以及得分信息
+	 */
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public List<Map> getSummaryScore() {
+		int scoreCount = 0;
+		int questionNum;
+		int isRight;
+		String isRightString;
+		int scoreValue;
+		int questionCount = 1;
+		List<Map> scoreSummaryInfoList = new ArrayList<Map>();
+		
+		//if(WebContextFactory.get().getSession().getAttribute("questionCount") == null) {
+		
+		List<Map> list = cpTestpaperRecordDao.getTestPaperRecordList();
+		Map map = list.get(0);
+		String count = map.get("remark").toString();
+
+		questionCount = Integer.parseInt(count);
+		System.out.println("题目总数：" + questionCount);
+		
+			//WebContextFactory.get().getSession().setAttribute("questionCount", questionCount);
+		//} else {
+		//	questionCount = (Integer) WebContextFactory.get().getSession().getAttribute("questionCount");
+		//}
+		
+		// 获取当前所有选手信息
+		List<CpUser> userInfoList = cpUserDao.getUserInfo();
+		System.out.println("选手信息 :" + userInfoList.toString());
+		// 获取当前所有选手的答题信息
+		List<CpAnswerRecord> answerInfoList = cpAnswerRecordDao.getAnswerInfo();
+		System.out.println("答题信息:" + answerInfoList.toString());
+		for(CpUser cpUser: userInfoList) {
+			scoreCount = 0;
+			Map userScoreMap = new JSONObject();
+			userScoreMap.put("name", cpUser.getName());
+			
+			for(CpAnswerRecord cpAnswerRecord:answerInfoList) {
+				// 当前用户
+				if(cpUser.getId().equals(cpAnswerRecord.getCpUser().getId())) {
+					// 获取题目编号和题目分值
+					questionNum = cpAnswerRecord.getCpQuestion().getNumber();
+					scoreValue = cpAnswerRecord.getCpQuestion().getScorevalue();
+					isRight = cpAnswerRecord.getIsright();
+					if(isRight == 0) {
+						isRightString = "错误";
+					} else {
+						isRightString = "正确";
+						scoreCount += scoreValue;
+					}
+					userScoreMap.put("" + questionNum, isRightString);
+				}
+			}
+			userScoreMap.put("score", scoreCount);
+			
+			if(scoreCount == 0) {
+				for(int i=1; i<=questionCount; i++) {
+					userScoreMap.put(""+i, "未答");
+				}
+			}
+			
+			scoreSummaryInfoList.add(userScoreMap);
+		}
+		
+		for(Map tmp:scoreSummaryInfoList) {
+			for(int i=1; i<=questionCount; i++) {
+				if(!tmp.containsKey(""+i)) {
+					tmp.put(""+i, "未答");
+				}
+			}
+		}
+		System.out.println("比赛实时信息 ：");
+		System.out.println(scoreSummaryInfoList.toString());
+		return scoreSummaryInfoList;
+	}
+}

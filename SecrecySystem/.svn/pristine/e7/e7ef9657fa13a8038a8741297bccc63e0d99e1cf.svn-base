@@ -1,0 +1,47 @@
+package com.egov.secrecysystem.service;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.egov.secrecysystem.dao.CpQuestionDao;
+import com.egov.secrecysystem.model.CpQuestion;
+
+@Service
+public class CpQuestionService {
+	@Autowired
+	private CpQuestionDao cpQuestionDao;
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public List<Map> getPageInstructors(String whereString,
+			Map<String, Object> valuesMap, String pageNum, String pageSize) {
+		try {
+			return cpQuestionDao.getPageInstructors(whereString, valuesMap,
+					Integer.parseInt(pageNum), Integer.parseInt(pageSize));
+		} catch (Exception e) {
+			System.out.println("getPageInstructors error");
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public long getInstructorsTotalCount(String whereString,
+			Map<String, Object> valuesMap) {
+		try {
+			return cpQuestionDao.getInstructorsTotalCount(whereString,
+					valuesMap);
+		} catch (Exception e) {
+			System.out.println("getInstructorsTotalCount error");
+			e.printStackTrace();
+			return 0;
+		}
+	}
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public CpQuestion findCpQuestionById(String id){
+		return cpQuestionDao.findCpQuestionById(id);
+	}
+}

@@ -1,0 +1,58 @@
+var fpFileUpload = new Ext.FormPanel({
+	id : 'fpFileUpload',
+	frame : true,
+	fileUpload : true,
+	height:300, 
+	 title:"知识库管理",
+	items : [{
+		xtype : 'textfield',
+		allowBlank : false,
+		margin : '20px,20px,20px,20px',
+		fieldLabel : '文件上传',
+		inputType : 'file',
+		style : "position:relative;top:80px;left:100px",
+		name : 'fileName'
+	} ],
+	buttonAlign : 'center',
+	buttons : [ {
+		text : '上传',
+		handler : function() {
+			if (fpFileUpload.form.isValid()) {
+				fpFileUpload.form.submit({
+					method : 'post',
+					url : '../upLoadFile.do',
+					waitMsg : '文件上传中...',
+					success : function() {
+						Ext.Msg.alert("系统提示", "文件上传成功！");
+					},
+					failure : function() {
+						Ext.Msg.alert("系统提示", "文件上传失败！");
+					}
+				});
+			} else {
+				Ext.Msg.alert("系统提示", "请选择文件后再上传！");
+			}
+		}
+	}]
+});
+
+var formpanel =new Ext.form.FormPanel({  
+	  items : { 
+		  
+		  title:"文件下载",
+		  //labelAlign: 'center',
+		  region : 'center',
+		  //margin : '20 20 20 20',
+		  layout : 'border',
+		  height:300,    
+	    html:"<center><a href='../secrecy/secrecy.doc'style='text-align:center;font-size:30px;font-weight:bold;'>杭州电子科技大学保密工作手册下载</a></center>"  
+	  }  
+	});
+
+function repositoryManagerPageInit() {
+	new Ext.Viewport({
+		items : [ fpFileUpload ,formpanel],
+		renderTo : Ext.getBody()
+	});
+
+}

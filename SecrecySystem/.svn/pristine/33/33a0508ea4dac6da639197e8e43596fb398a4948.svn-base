@@ -1,0 +1,498 @@
+var instructor_currentSearchFilter = "";
+var instructorinfowin;
+var instructorimportwin;
+
+var news = new Ext.data.Record.create([ {
+	name : 'id'
+}, {
+	name : 'title'
+}, {
+	name : 'content'
+}, {
+	name : 'date'
+}, {
+	name : 'titlename'
+} ]);
+
+var emptyNews = new news({
+	id : '',
+	title : '',
+	content : '',
+	date : '',
+	titlename : '',
+});
+
+var titleStore = new Ext.data.JsonStore({
+	fields:[
+	        'id',
+	        'remark',
+	        'titlename'
+	        ]
+}); 
+
+var newsStore = new Ext.data.Store({
+	reader : new Ext.data.JsonReader({
+		totalProperty : 'totalProperty',
+		root : 'root'
+	}, news),
+	proxy : new Ext.ux.data.DWRProxy({
+		dwrFunction : NewsController.pageInit
+	})
+});
+
+var instructorfields = [ {
+	columnWidth : 1.0,
+	layout : 'form',
+	items : [ {
+		xtype : 'hidden',
+		name : 'id',
+		anchor : '95%'
+	}, {
+		xtype : 'textfield',
+		id : 'title',
+		fieldLabel : '规章标题',
+		name : 'title',
+		anchor : '97.5%',
+		allowBlank : false
+	} ]
+}, {
+	columnWidth : .5,
+	layout : 'form',
+	items : [ {
+		xtype:'datefield',
+		id : 'date',
+		fieldLabel : '发布时间',
+		cls:"Wdate",
+		format:'Y-m-d',
+		name : 'date',
+		anchor : '80.5%',
+		allowBlank : false,
+		style : "position:relative;top:2px;"
+	} ]
+}, {
+	columnWidth : .5,
+	layout : 'form',
+	items : [ {
+		xtype : 'combo',
+		fieldLabel : '所属版块',
+		hiddenName : 'titlename',
+		triggerAction : 'all',
+		store : titleStore,
+		displayField : 'titlename',
+		valueField : 'titlename',
+		mode : 'local',
+		anchor : '80%',
+		editable : false,
+		allowBlank : false,
+		emptyText : '---请选择---',
+	} ]
+}, {
+	columnWidth : 1.0,
+	layout : 'form',
+	items : [ {
+		xtype : "textarea",
+		name : "content",
+		anchor : '97%',
+		height : 600,
+		id : "content",
+		fieldLabel : "规章内容",
+		listeners : {
+			"render" : function(f) {
+				var fckEditor = new FCKeditor("content");
+				fckEditor.Height = 500;
+				fckEditor.Width = 530;
+				fckEditor.BasePath = "/SecrecySystem/fckeditor/";
+				fckEditor.ToolbarSet = "Middle";
+				// fckEditor.Config['CustomConfigurationsPath'] = "/SecrecySystem/fckeditor/fckconfig.js";
+				fckEditor.ReplaceTextarea();
+			}
+		}
+	}  ]
+}];
+
+// 输入查询条件
+var instructor_searchform = new Ext.form.FormPanel({
+	id : 'instructor_searchform',
+	region : 'center',
+	frame : true,
+	labelWidth : 68,
+	autoHeight : true,
+	items : [ {
+		autoHeight : true,
+		layout : 'column',
+		items : [{
+			columnWidth : 1.0,
+			layout : 'form',
+			items : [ {
+				xtype : 'textfield',
+				fieldLabel : '规章条例',
+				name : 'and$title$like$%value%',
+				anchor : '96%'
+			} ]
+		}, {
+			columnWidth : 1.0,
+			layout : 'form',
+			items : [ {
+				xtype : 'textfield',
+				fieldLabel : '所属版块',
+				name : 'and$seTitle-titlename$like$%value%',
+				anchor : '96%'
+			} ]
+		} ]
+	} ],
+	keys : [ {
+		key : 13,// 回车
+		fn : function() {
+			instructor_search();
+			instructor_searchWin.hide();
+		}
+	} ]
+});
+
+// 查询Win
+var instructor_searchWin = new Ext.Window({
+	title : '选择查询条件',
+	width : 500,
+	autoHeight : true,
+	minWidth : 300,
+	minHeight : 200,
+	closeAction : 'hide',
+	layout : 'fit',
+	plain : true,
+	buttonAlign : 'center',
+	items : [ instructor_searchform ],
+	modal : true,
+	shadow : true,
+	buttons : [ {
+		text : '查询',
+		handler : function() {
+			instructor_search();
+			instructor_searchWin.hide();
+		}
+	}, {
+		text : '清空',
+		handler : function() {
+			instructor_searchform.getForm().reset();
+			instructor_currentSearchFilter = "";
+		}
+	}, {
+		text : '关闭',
+		handler : function() {
+			instructor_searchWin.hide();
+		}
+	} ]
+});
+
+// 具体查询函数
+function instructor_search() {
+	// 获取查询条件
+	instructor_currentSearchFilter = Ext.encode(instructor_searchform.getForm()
+			.getFieldValues());
+	newsStore.load({
+		params : {
+			filter : instructor_currentSearchFilter,
+			start : 0,
+			limit : 20
+		}
+	});
+}
+
+var college_instructorbasicform = new Ext.FormPanel({
+	id : 'college_instructorbasicform',
+	width : 600,
+	labelWidth : 65,
+	region : 'center',
+	labelAlign : 'left',
+	layout : 'column',
+	items : [ instructorfields ]
+});
+
+var college_instructorform = new Ext.Panel({
+	id : 'college_studentform',
+	title : '规章基本信息',
+	labelWidth : 80,
+	height : 400,
+	autoScroll : true,
+	frame : true,
+	bodyStyle : 'padding:5',
+	labelAlign : 'left',
+	region : 'south',
+	layout : 'border',
+	buttonAlign : 'center',
+	items : [college_instructorbasicform ],
+	buttons : [ {
+		text : '保存',
+		handler : function() {
+			Ext.MessageBox.wait("正在执行...", "提示");
+			if (college_instructorbasicform.getForm().isValid()) {
+				var senews = {
+					id : '',
+					title : '',
+					date : '',
+					titlename : '',
+					content : ''
+				};
+				senews = college_instructorbasicform.getForm().getValues();
+				var newsContent = FCKeditorAPI.GetInstance("content").GetXHTML();
+				
+			    if(newsContent.length == 0)
+			    {
+			    	Ext.MessageBox.alert('提示', "输入信息不能为空！");       
+			        return;
+			    }
+				senews.content = newsContent;
+ 	
+				NewsController.updateNewsInfo(senews, function(data) {
+					if (data=='success') {
+						Ext.MessageBox.alert('提示', "保存成功！");
+						instructorinfowin.hide();
+						FCKeditorAPI.GetInstance("content").SetHTML("");
+						newsGridInit();
+					} if(data=='falure') {
+						Ext.MessageBox.alert('提示', "此题暂时不能修改！");
+					}if(data =='error'){
+						Ext.MessageBox.alert('提示', "保存错误！");
+					}
+				});
+			} else {
+				Ext.MessageBox.alert('提示', "输入信息不能为空！");
+			}
+
+		}
+	}, {
+		text : '清空',
+		id : 'clearstuinfo',
+		handler : function() {
+			enableOfInstructorbasicform();
+			college_instructorbasicform.getForm().reset();
+		}
+	} ]
+});
+
+function instructorInfoWinInit(title) {
+	if (!instructorinfowin) {
+		instructorinfowin = new Ext.Window({
+			title : '',
+			width : 700,
+			height : 700,
+			closeAction : 'hide',
+			layout : 'fit',
+			plain : true,
+			bodyStyle : 'padding:5px',
+			items : [ college_instructorform ]
+		});
+	}
+	instructorinfowin.setTitle(title);
+	return instructorinfowin;
+}
+
+// 新闻grid
+var newsgrid = new Ext.grid.GridPanel({
+	region : 'center',
+	id : 'newsgrid',
+	store : newsStore,
+	loadMask : true,
+	width : 5000,
+	stripeRows : true,
+	autoScroll : true,
+	viewConfig : {
+		sortDescText : '降序',
+		sortAscText : '升序',
+		columnsText : '显示列',
+		forceFit : false
+	},
+	columns : [ new Ext.grid.RowNumberer({
+		width : 28
+	}), {
+		id : 'title',
+		header : '规章标题',
+		dataIndex : 'title',
+		width : 500,
+		sortable : true
+	}, {
+		id : 'content',
+		header : '规章内容',
+		dataIndex : 'content',
+		width : 450,
+		sortable : true,
+		hidden : true
+	}, {
+		id : 'date',
+		header : '发布时间',
+		dataIndex : 'date',
+		width : 200,
+		sortable : true
+	}, {
+		id : 'titlename',
+		header : '所属版块',
+		dataIndex : 'titlename',
+		width : 200,
+		sortable : true
+	} ],
+	tbar : [
+			{
+				text : '新增规章条例',
+				iconCls : 'add',
+				scope : this,
+				handler : function() {
+					college_instructorbasicform.getForm().loadRecord(
+							emptyNews);
+					instructorInfoWinInit("新增规章信息").show();
+				}
+			},
+			'-',
+			{
+				text : '编辑规章条例',
+				iconCls : 'edit',
+				scope : this,
+				handler : function() {
+					newsgrid.fireEvent('rowdblclick', newsgrid);
+				}
+			},
+			'-',
+			{
+				text : '删除规章条例',
+				iconCls : 'remove',
+				scope : this,
+				handler : function() {
+					if (newsgrid.getSelectionModel().hasSelection()) {
+						Ext.MessageBox.confirm('提示', '你确定要删除选中的规章吗?', function(
+								button) {
+							if (button == 'yes') {
+								var list = newsgrid.getSelectionModel()
+										.getSelections();
+								var rList = [];
+								for (var i = 0; i < list.length; i++) {
+									rList[i] = list[i].data["id"];
+								}
+
+								NewsController.deleteNewss(rList,
+										function(data) {
+									if (data=='success') {
+										Ext.MessageBox.alert('提示',
+												'删除规章成功!');
+										newsGridInit();
+									} if(data=='error') {
+										Ext.MessageBox.alert('提示',
+												"删除规章错误!");
+									}if(data=='falure'){
+										Ext.MessageBox.alert('提示',
+										"此条例暂时不能删除,删除规章失败!");
+									}
+								});
+							}
+						});
+					} else
+						Ext.MessageBox.alert('提示', "请至少选择一条规章!");
+				}
+			}, '-', {
+				text : '查询',
+				iconCls : 'upload-icon',
+				scope : this,
+				handler : function() {
+					instructor_searchWin.show();
+					instructor_searchform.getForm().reset();
+				}
+			}
+	],
+	bbar : new Ext.PagingToolbar({
+		pageSize : 20,
+		store : newsStore,
+		displayInfo : true,
+		firstText : '首页',
+		lastText : '尾页',
+		prevText : '上一页',
+		nextText : '下一页',
+		refreshText : '刷新',
+		displayMsg : '显示第 {0} 条到 {1} 条记录，一共 {2} 条',
+		emptyMsg : "没有记录",
+		doLoad : function(start) {
+			var params = {};
+			params.filter = instructor_currentSearchFilter;
+			params.start = start;
+			params.limit = this.pageSize;
+			if (this.fireEvent("beforechange", this, params) !== false) {
+				this.store.load({
+					params : params
+				});
+			}
+		}
+	}),
+	listeners : {
+		rowdblclick : function(grid) {
+			if (grid.getSelectionModel().hasSelection()) {
+				instructorInfoWinInit("编辑规章信息").show();
+				college_instructorbasicform.getForm().setValues(
+						grid.getSelectionModel().getSelected().data);
+				FCKeditorAPI.GetInstance("content").SetHTML(grid.getSelectionModel().getSelected().data.content);				
+			} else {
+				Ext.MessageBox.alert('提示', "请选择一条信息进行编辑!");
+			}
+
+		}
+	}
+});
+
+
+// 获取初始数据信息
+function newsGridInit() {	
+	newsStore.load({
+		params : {
+			filter : instructor_currentSearchFilter,
+			start : 0,
+			limit : 20
+		}
+	});
+}
+
+// 初始Init();
+function regulationInfoManagerPageInit() {
+	new Ext.Viewport({
+		layout : 'border',
+		hideMode : Ext.isIE ? 'offsets' : 'display',
+		items : [newsgrid ],
+		renderTo : Ext.getBody()
+	});
+	
+	NewsController.getTitleNameList(function(data){
+		if(data){
+			// 加载数据
+			titleStore.loadData(data);
+		}
+  	});
+	
+	newsGridInit();
+	
+}
+
+// 获取新闻内容长度
+function GetMessageLength(str) {
+    var oEditor = FCKeditorAPI.GetInstance(str) ;
+    var oDOM = oEditor.EditorDocument ;
+    var iLength ;
+    if ( document.all )        // If Internet Explorer.
+    {
+        iLength = oDOM.body.innerText.length ;
+    }
+    else                    // If Gecko.
+    {
+        var r = oDOM.createRange() ;
+        r.selectNodeContents( oDOM.body ) ;
+        iLength = r.toString().length ;
+    }
+    return iLength;
+}  
+
+/*// 获取fck内容
+function GetMessageContent(str)
+{
+     var oEditor = FCKeditorAPI.GetInstance(str);
+     return oEditor.GetXHTML();
+}  
+
+// 设置fck为空
+function setFckeditorEmpty(str) {
+    var oEditor = FCKeditorAPI.GetInstance(str) ;
+    return oEditor.InsertHtml('');
+}*/
+

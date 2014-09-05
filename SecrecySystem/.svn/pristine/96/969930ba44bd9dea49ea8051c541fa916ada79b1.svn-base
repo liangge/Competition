@@ -1,0 +1,57 @@
+package com.egov.secrecysystem.service;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.egov.secrecysystem.dao.PaperDanXuanDao;
+
+@Service
+@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+public class PaperDanXuanService {
+	/*
+	 * @Autowired private PaperDanXuanDao paperDanXuanDao;
+	 */
+	@Autowired
+	private PaperDanXuanDao paperDanXuanDao;
+	
+	/**
+	 * @author LiangGe
+	 * @param problemlevel
+	 * @param papernum
+	 * @return
+	 */
+	// 获取试卷单选题目
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public List<Map> getExamPaper(String subid, String problemlevel, int papernum) {
+		try {
+			List<Map> list = paperDanXuanDao.getExamPaper(problemlevel, papernum);
+			System.out.println("读取单选试卷内容如下：" + list.toString());
+			for(Map elemMap: list) {
+				elemMap.put("subidmark", subid);
+			}
+			return list;
+		} catch (Exception e) {
+			// TODO: handle exception
+			System.out.println("单选getExamPaper error!" + e.getMessage());
+			return null;
+		}
+	}
+	//查看考卷
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public List<Map> selectExamPaper(String problemlevel, int papernum) {
+		try {
+			List<Map> list = paperDanXuanDao.selectExamPaper(problemlevel, papernum);
+			
+			return list;
+		} catch (Exception e) {
+			// TODO: handle exception
+			System.out.println("单选getExamPaper error!" + e.getMessage());
+			return null;
+		}
+	}
+}

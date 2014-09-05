@@ -1,0 +1,218 @@
+package com.egov.secrecysystem.service;
+
+import java.util.List;
+import java.util.Map;
+
+import org.json.simple.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.egov.secrecysystem.dao.CpQuestionDao;
+import com.egov.secrecysystem.model.CpQuestion;
+
+@Service
+public class CpQuestionService {
+	@Autowired
+	private CpQuestionDao cpQuestionDao;
+	
+	/**
+	 * @author yangfan
+	 * @return
+	 */
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public List<Map> getQuestionRecordList() {
+		try {
+			List<Map> paperNumList = cpQuestionDao.getQuestionRecordList();
+			return paperNumList;
+		} catch (Exception e) {
+			System.out.println("getpaperNumList error!" + e.getMessage());
+			return null;
+		}
+	}
+	
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public List<Map> getPageInstructors(String whereString,
+			Map<String, Object> valuesMap, String pageNum, String pageSize) {
+		try {
+			return cpQuestionDao.getPageInstructors(whereString, valuesMap,
+					Integer.parseInt(pageNum), Integer.parseInt(pageSize));
+		} catch (Exception e) {
+			System.out.println("getPageInstructors error");
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public long getInstructorsTotalCount(String whereString,
+			Map<String, Object> valuesMap) {
+		try {
+			return cpQuestionDao.getInstructorsTotalCount(whereString,
+					valuesMap);
+		} catch (Exception e) {
+			System.out.println("getInstructorsTotalCount error");
+			e.printStackTrace();
+			return 0;
+		}
+	}
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public CpQuestion findCpQuestionById(String id){
+		return cpQuestionDao.findCpQuestionById(id);
+	}
+	
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public List<Map> pageInit(String whereString,
+			Map<String, Object> valuesMap, String pageNum, String pageSize) {
+		try {
+			return cpQuestionDao.pageInit(whereString, valuesMap,
+					Integer.parseInt(pageNum), Integer.parseInt(pageSize));
+		} catch (Exception e) {
+			System.out.println("getPageInstructors error");
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public String checkInstructorsData(List<JSONObject> instructors) {
+		try {
+			int instructorcount = 1;
+			for (JSONObject instructor : instructors) {
+				instructorcount++;
+			}
+			return null;
+		} catch (Exception e) {
+			return e.getMessage();
+		}
+
+	}
+	
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = false)
+	public boolean importInstructors(List<JSONObject> instructors) {
+		try {
+			int instructorcount = 0;
+			CpQuestion entity;
+			for (JSONObject instructor : instructors) {
+				entity = new CpQuestion();
+				entity.setNumber(Integer.parseInt(instructor.get("number").toString()));
+				entity.setQuestion(instructor.get("question").toString());
+				entity.setRightanswer(instructor.get("rightanswer").toString());
+				entity.setQuestion(instructor.get("question").toString());
+				entity.setScorevalue(Integer.parseInt(instructor.get("scorevalue").toString()));
+				entity.setRemark(instructor.get("remark").toString());
+				
+				cpQuestionDao.save(entity);
+				if (instructorcount % 50 == 0) {
+					cpQuestionDao.getSession().flush();
+					cpQuestionDao.getSession().clear();
+				}
+				instructorcount++;
+			}
+			return true;
+		} catch (Exception e) {
+			System.out.println("importInstructors error");
+			e.printStackTrace();
+			cpQuestionDao.getSession().getTransaction().rollback();
+			return false;
+		}
+	}
+	
+	//保存题目
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = false)
+	public String saveInstructor(JSONObject instructor) {
+		try {
+
+			CpQuestion entity = new CpQuestion();
+			
+			entity.setNumber(Integer.parseInt(instructor.get("number").toString()));
+			entity.setQuestion(instructor.get("question").toString());
+			entity.setRightanswer(instructor.get("rightanswer").toString());
+			entity.setScorevalue(Integer.parseInt(instructor.get("scorevalue").toString()));
+			cpQuestionDao.save(entity);
+			return "success";
+		} catch (Exception e) {
+			e.printStackTrace();
+			return "error";
+		}
+	}
+	
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = false)
+	public String updateInstructorAllInfo(JSONObject instructor) {
+
+		if (instructor.get("id").toString().equals("")) {
+			return this.saveInstructor(instructor);
+		} else {
+			try {
+				String result="";
+				CpQuestion entity = cpQuestionDao.findById(instructor
+						.get("id").toString());
+				if(entity == null){
+					result="falure";
+				}
+				else{
+					entity.setNumber(Integer.parseInt(instructor.get("number").toString()));
+					entity.setQuestion(instructor.get("question").toString());
+					entity.setRightanswer(instructor.get("rightanswer").toString());
+					entity.setScorevalue(Integer.parseInt(instructor.get("scorevalue").toString()));
+					cpQuestionDao.update(entity);
+					result="success";
+				}
+				
+				return result;
+			} catch (Exception e) {
+				e.printStackTrace();
+				return "error";
+			}
+		}
+	}
+	
+	/**
+	 * 根据id删除题目
+	 * @param ids
+	 * @return
+	 */
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = false)
+	public String deleteInstructors(List<String> ids) {
+		String result="";
+		try {
+			for (String id : ids) {
+				CpQuestion entity = cpQuestionDao.findById(id);
+				if(entity == null){
+					result="falure";
+				}else{
+					cpQuestionDao.delete(entity);
+					result="success";
+				}
+			}
+			return result;
+		} catch (Exception e) {
+			System.out.println("deleteInstructors error");
+			e.printStackTrace();
+			return "error";
+		}
+	}
+	
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public List<Map> getInstructorsInfoExcel() {
+		try {
+			return cpQuestionDao.getInstructorsInfoExcel();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	/**
+	 * @author LiangGe
+	 * @return
+	 * 获取题目数量
+	 */
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public int getQuestionCount(){
+		return cpQuestionDao.getQuestionCount();
+	}
+	
+	
+}

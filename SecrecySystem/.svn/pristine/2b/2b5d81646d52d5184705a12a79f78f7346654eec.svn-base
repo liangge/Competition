@@ -1,0 +1,88 @@
+package com.egov.secrecysystem.service;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.directwebremoting.WebContextFactory;
+import org.json.simple.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.egov.secrecysystem.dao.CpAnswerRecordDao;
+import com.egov.secrecysystem.dao.CpUserDao;
+import com.egov.secrecysystem.model.CpAnswerRecord;
+import com.egov.secrecysystem.model.CpUser;
+
+@Service
+public class CpAnswerRecordService {
+	@Autowired
+	private CpAnswerRecordDao cpAnswerRecordDao;
+	@Autowired
+	private CpUserDao cpUserDao;
+
+	/**
+	 * @author LiangGe
+	 * @return 
+	 * 获取所有选手当前答题以及得分信息
+	 */
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public List<Map> getSummaryScore() {
+		int scoreCount = 0;
+		int questionNum;
+		int isRight;
+		String isRightString;
+		int scoreValue;
+		List<Map> scoreSummaryInfoList = new ArrayList<Map>();
+		
+		int questionCount = (Integer) WebContextFactory.get().getSession().getAttribute("questionCount");
+		// 获取当前所有选手信息
+		List<CpUser> userInfoList = cpUserDao.getUserInfo();
+		// 获取当前所有选手的答题信息
+		List<CpAnswerRecord> answerInfoList = cpAnswerRecordDao.getAnswerInfo();
+		
+		for(CpUser cpUser: userInfoList) {
+			scoreCount = 0;
+			Map userScoreMap = new JSONObject();
+			userScoreMap.put("name", cpUser.getName());
+			
+			for(CpAnswerRecord cpAnswerRecord:answerInfoList) {
+				// 当前用户
+				if(cpUser.getId().equals(cpAnswerRecord.getCpUser().getId())) {
+					questionNum = cpAnswerRecord.getCpQuestion().getNumber();
+					isRight = cpAnswerRecord.getIsright();
+					if(isRight == 0) {
+						isRightString = "错误";
+					} else {
+						isRightString = "正确";
+					}
+					scoreValue = cpAnswerRecord.getCpQuestion().getScorevalue();
+					userScoreMap.put("" + questionNum, isRightString);
+					scoreCount += scoreValue;
+				}
+			}
+			userScoreMap.put("score", scoreCount);
+			
+			if(scoreCount == 0) {
+				for(int i=1; i<=questionCount; i++) {
+					userScoreMap.put(""+i, "未答");
+				}
+			}
+			
+			scoreSummaryInfoList.add(userScoreMap);
+		}
+		
+		for(Map tmp:scoreSummaryInfoList) {
+			for(int i=1; i<=questionCount; i++) {
+				if(!tmp.containsKey(""+i)) {
+					tmp.put(""+i, "未答");
+				}
+			}
+		}
+		
+		return scoreSummaryInfoList;
+	}
+}

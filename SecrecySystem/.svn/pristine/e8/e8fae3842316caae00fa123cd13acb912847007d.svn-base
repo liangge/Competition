@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2012-3-26 19:37:28 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="com.egov.secrecysystem.model.SeUser" table="SE_USER" catalog="SECRECYSYSTEM">
+        <id name="id" type="string">
+            <column name="ID" length="36" />
+            <generator class="uuid.hex" />
+        </id>
+        <many-to-one name="seRole" class="com.egov.secrecysystem.model.SeRole" fetch="select">
+            <column name="ROLEID" length="36">
+                <comment>&#189;&#199;&#201;&#171;ID</comment>
+            </column>
+        </many-to-one>
+   
+        <property name="loginname" type="string">
+            <column name="LOGINNAME" unique="true">
+                <comment>&#181;&#199;&#194;&#188;&#195;&#251;</comment>
+            </column>
+        </property>
+        <property name="password" type="string">
+            <column name="PASSWORD">
+                <comment>&#181;&#199;&#194;&#188;&#195;&#220;&#194;&#235;</comment>
+            </column>
+        </property>
+        <property name="name" type="string">
+            <column name="NAME">
+                <comment>&#208;&#213;&#195;&#251;</comment>
+            </column>
+        </property>
+        <property name="userlevel" type="string">
+            <column name="USERLEVEL" />
+        </property>
+        <property name="score" type="java.lang.Integer">
+            <column name="SCORE" />             
+        </property> 
+    </class>
+</hibernate-mapping>

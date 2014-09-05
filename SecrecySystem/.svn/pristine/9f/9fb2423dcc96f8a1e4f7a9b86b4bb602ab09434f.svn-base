@@ -1,0 +1,277 @@
+package com.egov.secrecysystem.dao;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import org.hibernate.Query;
+import org.hibernate.Session;
+
+import com.egov.secrecysystem.model.SeProblemPanDuan;
+
+public class ProblemPanDuanDao extends AbstractHibernateDao<SeProblemPanDuan> {
+	ProblemPanDuanDao() {
+		super(SeProblemPanDuan.class);
+	}
+
+	public Session getSession() {
+		return this.getCurrentSession();
+	}
+
+	public List<Map> getPageInstructors(String whereString,
+			Map<String, Object> valuesMap, int pageNum, int pageSize,int paperNum,String userLevel) {
+//		String hql = "select new map(t.id as id, t.problemlevel as problemlevel, t.mustright as mustright, t.keyproblem as keyproblem,"
+//				+ "t.question as question,"
+//				+ "t.answer as answer,t.problemnum as problemnum) from com.egov.secrecysystem.model.SeProblemPanDuan t";
+//		hql += whereString;
+		String hql = "select new map(t.id as id,t.question as question,t.problemnum as problemnum) from com.egov.secrecysystem.model.SePaperPanDuan t1 "
+				+ "inner join t1.seProblemPanDuan t";
+		hql += whereString + " and t1.papernum = :paperNum and t1.userlevel = :userLevel";
+		hql += " order by t.id ";
+		Query query = this.getCurrentSession().createQuery(hql)
+				.setFirstResult(pageNum).setMaxResults(pageSize);
+		String[] perchs = valuesMap.keySet().toArray(new String[0]);
+
+		query.setParameter("paperNum",paperNum);
+		query.setParameter("userLevel",userLevel);
+		
+		for (int i = 0; i < perchs.length; i++) {
+
+			query.setParameter(perchs[i], valuesMap.get(perchs[i]));
+		}
+		return query.list();
+	}
+	//初始化判断题页面
+	public List<Map> pageInit(String whereString,
+			Map<String, Object> valuesMap, int pageNum, int pageSize) {
+		String hql = "select new map(t.id as id, t.problemlevel as problemlevel, t.mustright as mustright, t.keyproblem as keyproblem,"
+				+ "t.question as question,"
+				+ "t.answer as answer,t.seQuestionBank.subname as subname) from com.egov.secrecysystem.model.SeProblemPanDuan t";
+		hql += whereString;
+		hql += " order by t.id ";
+		Query query = this.getCurrentSession().createQuery(hql)
+				.setFirstResult(pageNum).setMaxResults(pageSize);
+		String[] perchs = valuesMap.keySet().toArray(new String[0]);
+
+		for (int i = 0; i < perchs.length; i++) {
+			if (perchs[i].equals("score")) {
+				query.setParameter(perchs[i],
+						Integer.parseInt((String) valuesMap.get(perchs[i])));
+			} else {
+				query.setParameter(perchs[i], valuesMap.get(perchs[i]));
+			}
+		}
+		return query.list();
+	}
+	public long getInstructorsTotalCount(String whereString,
+			Map<String, Object> valuesMap) {
+		String hql = "select t from com.egov.secrecysystem.model.SeProblemPanDuan t ";
+		hql += whereString;
+		hql += " and t is not null";
+		Query query = this.getCurrentSession().createQuery(hql);
+		String[] perchs = valuesMap.keySet().toArray(new String[0]);
+		for (int i = 0; i < perchs.length; i++) {
+			query.setParameter(perchs[i], valuesMap.get(perchs[i]));
+		}
+		return query.list().size();
+	}
+
+	public List<Map> getInstructorsInfoExcel() {
+
+		String hql = "select new map(t.id as id, t.problemlevel as problemlevel, t.mustright as mustright, t.keyproblem as keyproblem,"
+				+ "t.question as question,"
+				+ "t.answer as answer,t.seQuestionBank.subname as subname) from com.egov.secrecysystem.model.SeProblemPanDuan t";
+		Query query = this.getCurrentSession().createQuery(hql);
+		return query.list();
+
+	}
+	// 获取单选题目等级列表List
+		public List<Map> getProblemLevelList() {
+	        String hql = "select distinct new map(t.problemlevel as problemlevel, t.problemlevel as levelname) from com.egov.secrecysystem.model.SeProblemPanDuan t ";
+
+	        return this.getCurrentSession().createQuery(hql).list();
+		}
+
+	/**
+	 * @author LiangGe
+	 * @param problemlevel
+	 * @param subid
+	 * @return
+	 */
+	// 单选考卷生成普通题目
+	public List<Map> generatePutongProblem(String problemlevel, String subid, int putongNum) {
+		String hql = "select new map(t.id as id, t.problemlevel as problemlevel, t.mustright as mustright,t.keyproblem as keyproblem, t.question as question,"
+				+ "t.seQuestionBank.id as subid) from com.egov.secrecysystem.model.SeProblemPanDuan t ";
+		hql += "where t.mustright = '0' and t.keyproblem = '0'";
+		if(!"0".equals(subid)) {
+			hql += " and t.problemlevel = :problemlevel and t.seQuestionBank.id = :subid ";
+		} else {
+			hql += " and t.problemlevel in (:levelList)";
+		}
+		hql += " order by rand()";
+		Query query = this.getCurrentSession().createQuery(hql);
+		
+		if(!"0".equals(subid)) {
+			query.setParameter("problemlevel", problemlevel);
+			query.setParameter("subid", subid);
+		} else {
+			List list = new ArrayList();
+			list.add("000");
+			list.add(problemlevel);
+			query.setParameterList("levelList", list);
+		}
+		System.out.println(query.toString());
+		
+		return query.setMaxResults(putongNum).list();
+	}
+	
+	/**
+	 * @author LiangGe
+	 * @return
+	 */
+	// 单选考卷生成关键题目
+	public List<Map> generateKeyProblem(String problemlevel, String subid, int danxuanKeyNum) {
+		String hql = "select new map(t.id as id, t.problemlevel as problemlevel, t.mustright as mustright,t.keyproblem as keyproblem, t.question as question,"
+				+ "t.seQuestionBank.id as subid) from com.egov.secrecysystem.model.SeProblemPanDuan t ";
+		hql += "where t.mustright = '0' and t.keyproblem = '1'";
+		if(!"0".equals(subid)) {
+			hql += " and t.problemlevel = :problemlevel and t.seQuestionBank.id = :subid ";
+		} else {
+			hql += " and t.problemlevel in (:levelList)";
+		}
+		hql += " order by rand()";
+		Query query = this.getCurrentSession().createQuery(hql);
+		
+		if(!"0".equals(subid)) {
+			query.setParameter("problemlevel", problemlevel);
+			query.setParameter("subid", subid);
+		} else {
+			List list = new ArrayList();
+			list.add("000");
+			list.add(problemlevel);
+			query.setParameterList("levelList", list);
+		}
+		System.out.println(query.toString());
+		
+		return query.setMaxResults(danxuanKeyNum).list();
+	}
+	
+	
+	/**
+	 * @param problemlevel
+	 * @param subid
+	 * @return
+	 */
+	// 单选考卷生成必对题目
+	public List<Map> generateMustProblem(String problemlevel, String subid, int mustRightNum) {
+		String hql = "select new map(t.id as id, t.problemlevel as problemlevel, t.mustright as mustright,t.keyproblem as keyproblem, t.question as question,"
+				+ "t.seQuestionBank.id as subid) from com.egov.secrecysystem.model.SeProblemPanDuan t ";
+		hql += "where t.mustright = '1' and t.keyproblem = '0'";
+		if(!"0".equals(subid)) {
+			hql += " and t.problemlevel = :problemlevel and t.seQuestionBank.id = :subid ";
+		} else {
+			hql += " and t.problemlevel in (:levelList)";
+		}
+		hql += " order by rand()";
+		Query query = this.getCurrentSession().createQuery(hql);
+		
+		if(!"0".equals(subid)) {
+			query.setParameter("problemlevel", problemlevel);
+			query.setParameter("subid", subid);
+		} else {
+			List list = new ArrayList();
+			list.add("000");
+			list.add(problemlevel);
+			query.setParameterList("levelList", list);
+		}
+		System.out.println(query.toString());
+		
+		return query.setMaxResults(mustRightNum).list();
+	}
+	/**
+	 * @author LiangGe
+	 * @return
+	 */
+	// 获取一道更改后的单选题目
+	public List<Map> getOnePanduanProblem(String problemlevel,String subid,String mustright,String keyproblem,List<String> problemids) {
+		System.out.println("这是一个大问题： problemlevel = " + problemlevel + "subid=" + subid + "mustright="+mustright+"keyproblem="+ keyproblem+ "wentiji =" + problemids);
+		String hql = "select new map(t.id as id, t.problemlevel as problemlevel, t.mustright as mustright,t.keyproblem as keyproblem, t.question as question,"
+				+ "t.seQuestionBank.id as subid) from com.egov.secrecysystem.model.SeProblemPanDuan t ";
+		hql += " where t.mustright =:mustright and t.keyproblem =:keyproblem ";
+		if(!"0".equals(subid)) {
+			hql += " and t.problemlevel =:problemlevel and t.seQuestionBank.id =:subid ";
+		} else {
+			hql += " and t.problemlevel in (:levelList)";
+		}
+		
+		hql += " and t.id not in (:ids)";
+		hql += " order by rand()";
+		Query query = this.getCurrentSession().createQuery(hql);
+		
+		query.setParameter("mustright", mustright);
+		query.setParameter("keyproblem", keyproblem);
+		if(!"0".equals(subid)) {
+			query.setParameter("problemlevel", problemlevel);
+			query.setParameter("subid", subid);
+		} else {
+			List list = new ArrayList();
+			list.add("000");
+			list.add(problemlevel);
+			query.setParameterList("levelList", list);
+		}
+		query.setParameterList("ids", problemids);
+		System.out.println("------测试"+query.toString());
+		List<Map> list = query.setFirstResult(0).setMaxResults(20).list();
+		System.out.println("测试Bug去除数据后数据为：" + list.toString());
+		if(list.size() < 1) {
+			System.out.println("测试bug，取出数据为空！");
+		}
+		return list;
+	}
+	/**
+	 * @author LiangGe
+	 * @return
+	 */
+	// 获取一道更改后的单选题目
+	public List<Map> getPanduanProblemByHander(String problemlevel,String subid,String mustright,String keyproblem,List<String> problemids,String namelike) {
+		System.out.println("这是一个大问题： problemlevel = " + problemlevel + "subid=" + subid + "mustright="+mustright+"keyproblem="+ keyproblem+ "wentiji =" + problemids);
+		String hql = "select new map(t.id as id, t.problemlevel as problemlevel, t.mustright as mustright,t.keyproblem as keyproblem, t.question as question,"
+				+ "t.seQuestionBank.id as subid) from com.egov.secrecysystem.model.SeProblemPanDuan t ";
+		hql += " where t.mustright =:mustright and t.keyproblem =:keyproblem ";
+		if(!"0".equals(subid)) {
+			hql += " and t.problemlevel =:problemlevel and t.seQuestionBank.id =:subid ";
+		} else {
+			hql += " and t.problemlevel in (:levelList)";
+		}
+		
+		hql += " and t.id not in (:ids)";
+		if(!"".equals(namelike)) {
+			hql += " and t.question like :question ";
+		}
+		hql += " order by rand()";
+		Query query = this.getCurrentSession().createQuery(hql);
+		
+		query.setParameter("mustright", mustright);
+		query.setParameter("keyproblem", keyproblem);
+		if(!"0".equals(subid)) {
+			query.setParameter("problemlevel", problemlevel);
+			query.setParameter("subid", subid);
+		} else {
+			List list = new ArrayList();
+			list.add("000");
+			list.add(problemlevel);
+			query.setParameterList("levelList", list);
+		}
+		query.setParameterList("ids", problemids);
+		if(!"".equals(namelike)) {
+			query.setParameter("question", "%"+namelike+"%");
+		}
+		System.out.println("------测试"+query.toString());
+		List<Map> list = query.setFirstResult(0).setMaxResults(20).list();
+		System.out.println("测试Bug去除数据后数据为：" + list.toString());
+		if(list.size() < 1) {
+			System.out.println("测试bug，取出数据为空！");
+		}
+		return list;
+	}
+}

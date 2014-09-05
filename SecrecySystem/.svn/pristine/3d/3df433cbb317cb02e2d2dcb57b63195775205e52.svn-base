@@ -1,0 +1,279 @@
+package com.egov.secrecysystem.service;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.security.auth.login.LoginContext;
+
+import org.json.simple.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.egov.secrecysystem.dao.CpRoleDao;
+import com.egov.secrecysystem.dao.CpUserDao;
+import com.egov.secrecysystem.model.CpRole;
+import com.egov.secrecysystem.model.CpUser;
+import com.egov.secrecysystem.model.SeUser;
+import com.egov.secrecysystem.utility.Md5;
+
+@Service
+public class CpUserService {
+	@Autowired
+	private CpRoleDao cpRoleDao;
+	@Autowired
+	private CpUserDao cpUserDao;
+
+	/**
+	 * @author LiangGe
+	 * @param whereString
+	 * @param valuesMap
+	 * @param pageNum
+	 * @param pageSize
+	 * @return
+	 * 分页获取所有用户信息
+	 */
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public List<Map> getAllUserInfo(String whereString,
+			Map<String, Object> valuesMap, String pageNum, String pageSize) {
+		try {
+			return cpUserDao.getAllUserInfo(whereString, valuesMap,
+					Integer.parseInt(pageNum), Integer.parseInt(pageSize));
+		} catch (Exception e) {
+			System.out.println("getAllUserInfo error");
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	/**
+	 * @author LiangGe
+	 * @param whereString
+	 * @param valuesMap
+	 * @return
+	 * 获取用户总数
+	 */
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public long getUserTotalCount(String whereString,
+			Map<String, Object> valuesMap) {
+		try {
+			return cpUserDao.getUserTotalCount(whereString, valuesMap);
+		} catch (Exception e) {
+			System.out.println("getUserTotalCount error");
+			e.printStackTrace();
+			return 0;
+		}
+	}
+	
+	// 通过登录名得到用户
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public CpUser getRoleByLoginName(String loginName) {
+		return cpUserDao.getRoleByLoginName(loginName);
+	}
+
+	/**
+	 * @author LiangGe
+	 * @param name
+	 * @param password
+	 * @return 验证用户登录
+	 */
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public String validateLogin(String name, String password) {
+		String temp = this.cpUserDao.validateLogin(name, password);
+		return temp;
+	}
+
+	/**
+	 * @author LiangGe
+	 * @param loginName
+	 * @return 通过loginname获取用户密码
+	 */
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public String getRolePassword(String loginName) {
+		return this.cpUserDao.getRolePassword(loginName);
+	}
+
+	/**
+	 * @author LiangGe
+	 * @param loginName
+	 * @param password
+	 * @return 修改密码
+	 */
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = false)
+	public boolean setRolePassword(String loginName, String password) {
+		return this.cpUserDao.setRolePassword(loginName, password);
+	}
+
+	/**
+	 * @author LiangGe
+	 * @return
+	 * 导出用户excel格式
+	 */
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public List<Map> exportUserExcel() {
+		try {
+			return cpUserDao.exportUserExcel();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	/**
+	 * @author LiangGe
+	 * @param jsonObject
+	 * @return
+	 * 修改用户基本信息
+	 */
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = false)
+	public String updateUserInfo(JSONObject jsonObject) {
+		if (jsonObject.get("id").toString().equals("")) {
+			return this.saveUserInfo(jsonObject);
+		} else {
+			try {
+				CpUser entity = cpUserDao.findById(jsonObject.get("id")
+						.toString());
+
+				entity.setName(jsonObject.get("name").toString());
+				entity.setLoginname(jsonObject.get("loginname").toString());
+				CpUser cpUser = cpUserDao.getRoleByLoginName(jsonObject.get("loginname").toString());
+				if(cpUser != null) {
+					return "登录用户帐号已经存在，不能重复";
+				}
+				cpUserDao.update(entity);
+				return "success";
+			} catch (Exception e) {
+				e.printStackTrace();
+				return "false";
+			}
+		}
+	}
+	
+	/**
+	 * @author LiangGe
+	 * @param jsonObject
+	 * @return
+	 * 保存用户基本信息
+	 */
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = false)
+	public String saveUserInfo(JSONObject jsonObject) {
+		try {
+			CpUser entity = new CpUser();
+			Md5 md5Encrypt = new Md5();
+			CpRole cpRole = cpRoleDao.findByProperty("name", "选手").get(0);
+			String passwd = md5Encrypt.md5("123456");
+			entity.setName(jsonObject.get("name").toString());
+			entity.setLoginname(jsonObject.get("loginname").toString());
+			entity.setPasswd(passwd);
+			entity.setCpRole(cpRole);
+			CpUser cpUser = cpUserDao.getRoleByLoginName(jsonObject.get("loginname").toString());
+			if(cpUser != null) {
+				return "登录用户帐号已经存在，不能重复";
+			}
+			cpUserDao.save(entity);
+			return "success";
+		} catch (Exception e) {
+			// TODO: handle exception
+			return "false";
+		}
+	}
+	
+	/**
+	 * @author LiangGe
+	 * @param ids
+	 * @return
+	 * 删除用户信息
+	 */
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = false)
+	public boolean deleteUserInfo(List<String> ids) {
+		try {
+			for (String id : ids) {
+				CpUser entity = cpUserDao.findById(id);
+				cpUserDao.delete(entity);
+			}
+			return true;
+		} catch (Exception e) {
+			System.out.println("deleteUserInfo error");
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	/**
+	 * @author LiangGe
+	 * @param instructors
+	 * @return
+	 * 核查用户信息
+	 */
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public String checkInstructorsData(List<JSONObject> instructors) {
+		try {
+			int instructorcount = 1;
+			String name;
+			String loginname;
+			Object objectName;
+			Object objectLoginName;
+			Map map = new JSONObject();
+			for (JSONObject instructor : instructors) {
+				instructorcount++;
+				objectName = instructor.get("name");
+				objectLoginName = instructor.get("loginname");
+				if(objectName == null) {
+					return "第" + instructorcount + "行 名称不能为空";
+				} else {
+					name = objectName.toString();
+				}
+				if(objectLoginName == null) {
+					return "第" + instructorcount + "行 用户登录名不能为空";
+				} else {
+					loginname = objectLoginName.toString();
+				}
+				if(map.containsKey(loginname)) {
+					return "第" + instructorcount + "行 用户登录名已经存在，不能重复";
+				} else {
+					map.put(loginname, loginname);
+				}
+			}
+			return null;
+		} catch (Exception e) {
+			return e.getMessage();
+		}
+	}
+	
+	/**
+	 * @author LiangGe
+	 * @param instructors
+	 * @return
+	 * 导入用户信息
+	 */
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = false)
+	public boolean importInstructors(List<JSONObject> instructors) {
+		try {
+			int instructorcount = 0;
+			CpUser entity;
+			for (JSONObject instructor : instructors) {
+				entity = new CpUser();
+				Md5 md5Encrypt = new Md5();
+				String password = md5Encrypt.md5("123456");
+				entity.setName(instructor.get("name").toString());
+				entity.setLoginname(instructor.get("loginname").toString());
+				entity.setPasswd(password);
+				CpRole cpRole = cpRoleDao.findByProperty("name", "选手").get(0);
+				entity.setCpRole(cpRole);
+				cpUserDao.save(entity);
+				if (instructorcount % 50 == 0) {
+					cpUserDao.getSession().flush();
+					cpUserDao.getSession().clear();
+				}
+				instructorcount++;
+			}
+			return true;
+		} catch (Exception e) {
+			System.out.println("importInstructors error");
+			e.printStackTrace();
+			cpUserDao.getSession().getTransaction().rollback();
+			return false;
+		}
+	}
+}

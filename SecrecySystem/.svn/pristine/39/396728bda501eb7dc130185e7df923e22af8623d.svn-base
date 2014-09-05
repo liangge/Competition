@@ -1,0 +1,28 @@
+package com.egov.secrecysystem.controller;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.directwebremoting.annotations.RemoteMethod;
+import org.directwebremoting.annotations.RemoteProxy;
+import org.directwebremoting.spring.SpringCreator;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.egov.secrecysystem.service.CpAnswerRecordService;
+
+@RemoteProxy(creator = SpringCreator.class)
+public class CpAnswerRecordController {
+	@Autowired
+	private CpAnswerRecordService cpAnswerRecordService;
+
+	/** 
+	 * @author LiangGe
+	 * @return
+	 * 获取所有选手当前答题以及得分信息
+	 */
+	@RemoteMethod
+	public List<Map> getSummaryScore() {
+		return cpAnswerRecordService.getSummaryScore();
+	}
+}

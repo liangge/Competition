@@ -1,0 +1,199 @@
+package com.egov.secrecysystem.service;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import org.json.simple.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.egov.secrecysystem.dao.NewsDao;
+import com.egov.secrecysystem.dao.TitleDao;
+import com.egov.secrecysystem.model.SeNews;
+import com.egov.secrecysystem.model.SeProblemDanXuan;
+
+@Service
+@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+public class NewsService {
+	@Autowired
+	private NewsDao newsDao;
+	@Autowired
+	private TitleDao titleDao;
+	
+	/**
+	 * @author LiangGe
+	 * @param whereString
+	 * @param valuesMap
+	 * @param pageNum
+	 * @param pageSize
+	 * @return
+	 */
+	// 获取新闻信息List
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public List<Map> pageInit(String whereString,
+			Map<String, Object> valuesMap, String pageNum, String pageSize) {
+		try {
+			List<Map> newslist = newsDao.pageInit(whereString, valuesMap,
+					Integer.parseInt(pageNum), Integer.parseInt(pageSize));
+			System.out.println("新闻统计分页数据：" + newslist.toString());
+			for (Map element : newslist) {
+				Date time = (Date)element.get("date");
+				SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd");
+				element.put("date", df.format(time));
+			}
+			return newslist;
+		} catch (Exception e) {
+			System.out.println("pageInit error");
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	/**
+	 * @author LiangGe
+	 * @param whereString
+	 * @param valuesMap
+	 * @return
+	 */
+	// 获取新闻总数个数
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public long getNewsCount(String whereString,
+			Map<String, Object> valuesMap) {
+		try {
+			return newsDao.getNewsCount(whereString,
+					valuesMap);
+		} catch (Exception e) {
+			System.out.println("getNewsCount error");
+			e.printStackTrace();
+			return 0;
+		}
+	}
+	
+	/**
+	 * @author LiangGe
+	 * @param id
+	 * @return
+	 */
+	// 获取新闻标题信息List
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public List<Map> getNewsTitle(String id) {
+		List<Map> list = newsDao.getNewsTitle(id);
+		for (Map element : list) {
+			Date time = (Date)element.get("date");
+			SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd");
+			element.put("date", df.format(time));
+		}
+		System.out.println("获取标题如下：" + list.toString());
+		return list;
+	}
+	
+	/**
+	 * @author LiangGe
+	 * @param id
+	 * @return
+	 */
+	// 获取新闻具体信息
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public Map getNewsInfoDetail(String id) {
+		List<Map> list = newsDao.getNewsInfoDetail(id);
+		Date time = (Date)list.get(0).get("date");
+		SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd");
+		list.get(0).put("date", df.format(time));
+		return list.get(0);
+	}
+	
+	/**
+	 * @author LiangGe
+	 * @param news
+	 * @return
+	 */
+	// 修改新闻基本信息
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = false)
+	public String updateNewsInfo(JSONObject news) {
+		System.out.println("新增新闻内容为： = " + news.toString());
+		if (news.get("id").toString().equals("")) {
+			return this.saveNewsInfo(news);
+		} else {
+			try {
+				String result="";
+				SeNews entity = newsDao.findById(news.get("id").toString());
+
+				Date date = new Date();
+				DateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+				
+				date = sdf.parse(news.get("date").toString());
+				
+				entity.setTitle(news.get("title").toString());
+				entity.setDate(date);
+				entity.setContent(news.get("content").toString());
+				entity.setJsp("NewsInfoDetail.do");
+				entity.setSeTitle(titleDao.findByProperty("titlename", news.get("titlename").toString()).get(0));
+				newsDao.update(entity);
+				result="success";
+				return result;
+			} catch (Exception e) {
+				e.printStackTrace();
+				return "error";
+			}
+		}
+	}
+	
+	
+	/**
+	 * @author LiangGe
+	 * @param news
+	 * @return
+	 */
+	// 保存新增新闻信息
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = false)
+	public String saveNewsInfo(JSONObject news) {
+		try {
+			String result="";
+			SeNews entity = new SeNews();
+
+			Date date = new Date();
+			DateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+			
+			date = sdf.parse(news.get("date").toString());
+			
+			entity.setTitle(news.get("title").toString());
+			entity.setDate(date);
+			entity.setContent(news.get("content").toString());
+			entity.setJsp("NewsInfoDetail.do");
+			entity.setSeTitle(titleDao.findByProperty("titlename", news.get("titlename").toString()).get(0));
+			newsDao.save(entity);
+			return "success";
+		} catch (Exception e) {
+			e.printStackTrace();
+			return "error";
+		}
+	}
+	
+	/**
+	 * @author LiangGe
+	 * @param ids
+	 * @return
+	 */
+	// 删除新闻信息
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = false)
+	public String deleteNewss(List<String> ids) {
+		String result="";
+		try {
+			for (String id : ids) {
+				SeNews entity = newsDao.findById(id);
+				newsDao.delete(entity);
+				result="success";
+			}
+			return result;
+		} catch (Exception e) {
+			System.out.println("deleteNewss error");
+			e.printStackTrace();
+			return "error";
+		}
+	}
+}

@@ -1,0 +1,50 @@
+package com.egov.secrecysystem.dao;
+
+import java.util.List;
+import java.util.Map;
+
+import org.hibernate.Query;
+import org.hibernate.Session;
+
+import com.egov.secrecysystem.model.CpAnswerRecord;
+
+public class CpAnswerRecordDao extends AbstractHibernateDao<CpAnswerRecord> {
+	CpAnswerRecordDao() {
+		super(CpAnswerRecord.class);
+	}
+	public Session getSession() {
+		return this.getCurrentSession();
+	}
+	/**
+	 * 判断是否答过本题
+	 * @param userId
+	 * @param questionId
+	 * @author yangfan
+	 * @return
+	 */
+	public List<Map> judgeRecordExist(String userId, String questionId) {
+		String hql = "select new map(t.id as id, t.cpQuestion.id as qid, t.cpUser.id as uid) from com.egov.secrecysystem.model.CpAnswerRecord t where t.cpQuestion.id =:questionId and t.cpUser.id =:userId";
+		Query query = this.getCurrentSession().createQuery(hql);
+		return query.setParameter("userId", userId).setParameter("questionId", questionId).list();
+	}
+
+	/**
+	 * @author LiangGe
+	 * @return
+	 * 获取当前所有答题记录
+	 */
+	public List<CpAnswerRecord> getAnswerInfo() {
+		String hql = "from com.egov.secrecysystem.model.CpAnswerRecord e";
+		return this.getCurrentSession().createQuery(hql).list();
+	}
+	
+	/**
+	 * @author LiangGe
+	 * 清楚答题历史数据
+	 */
+	public void clearHistoryData() {
+        String hql = "delete from com.egov.secrecysystem.model.CpAnswerRecord e ";
+        Query query = this.getCurrentSession().createQuery(hql);
+        query.executeUpdate();
+	}
+}

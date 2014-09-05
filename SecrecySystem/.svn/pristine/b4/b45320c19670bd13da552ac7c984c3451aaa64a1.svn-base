@@ -1,0 +1,56 @@
+package com.egov.secrecysystem.dao;
+
+import java.util.List;
+import java.util.Map;
+
+import org.hibernate.Query;
+
+import com.egov.secrecysystem.model.SeTestPaperRecord;
+
+public class TestPaperRecordDao extends AbstractHibernateDao<SeTestPaperRecord> {
+
+	TestPaperRecordDao() {
+		super(SeTestPaperRecord.class);
+	}
+	
+	public List<Map> getPaperNumList() {
+		String hql = "select new map(t.papernum as papernum, t.starttime as starttime, t.examname as examname) from com.egov.secrecysystem.model.SeTestPaperRecord t group by t.starttime";
+
+		return this.getCurrentSession().createQuery(hql).list();
+	}
+	
+	// 获取最近几次考试信息
+	public List getRecentPaperNumList(int recentnum) {
+		String hql = "select t.id from com.egov.secrecysystem.model.SeTestPaperRecord t order by t.papernum";
+		return this.getCurrentSession().createQuery(hql).setFirstResult(1).setMaxResults(recentnum).list();
+	}
+	// 获取考试时间信息
+	public List<Map> getScoreInfo_getStartTime() {
+        String hql = "select new map(t.starttime as starttime, t.papernum as papernum) from com.egov.secrecysystem.model.SeTestPaperRecord t order by t.starttime desc";
+        return this.getCurrentSession().createQuery(hql).setFirstResult(0).setMaxResults(20).list();
+	}
+	/**获取出卷记录
+	 * @author yangfan
+	 * @return
+	 */
+	public List<Map> getTestPaperRecordList() {
+		String hql = "select new map(t.id as id,t.papernum as papernum, t.starttime as starttime,t.endtime as endtime,t.examname as examname) from com.egov.secrecysystem.model.SeTestPaperRecord t "
+				+ "where t.papernum = (select max(papernum) from t)";
+
+		return this.getCurrentSession().createQuery(hql).list();
+	}	
+	
+	/**
+	 * @author LiangGe
+	 * @return
+	 */
+	public SeTestPaperRecord getRecentPaperRecord() {
+		String hql = "from com.egov.secrecysystem.model.SeTestPaperRecord t where t.papernum = (select max(papernum) from t)";
+		Query query = this.getCurrentSession().createQuery(hql);
+		List<SeTestPaperRecord> list = query.list();
+		if(list.size() > 0) {
+			return list.get(0);
+		}
+		return null;
+	}
+}

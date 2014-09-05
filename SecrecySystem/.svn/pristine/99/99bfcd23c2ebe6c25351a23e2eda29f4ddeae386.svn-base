@@ -1,0 +1,51 @@
+package com.egov.secrecysystem.dao;
+
+import java.util.List;
+import java.util.Map;
+
+import org.hibernate.Query;
+
+import com.egov.secrecysystem.model.SePaperDanXuan;
+import com.egov.secrecysystem.model.SePaperDuoXuan;
+
+
+public class PaperDuoXuanDao  extends AbstractHibernateDao<SePaperDuoXuan> {
+
+	PaperDuoXuanDao(){
+		super(SePaperDuoXuan.class);
+	}
+	
+	// 获取某一条单选出卷记录
+	public SePaperDuoXuan findPaperDuoxuan(String id,String userlevel,int papernum) {
+		String hql = "from com.egov.secrecysystem.model.SePaperDuoXuan t where t.papernum =:papernum and userlevel =:userlevel and t.seProblemDuoXuan.id =:id ";
+		Query query = this.getCurrentSession().createQuery(hql);
+		query.setParameter("papernum", papernum);
+		query.setParameter("userlevel", userlevel);
+		query.setParameter("id", id);
+		List<SePaperDuoXuan> list = query.list();
+		if(list.size() < 1) {
+			return null;
+		}
+		return list.get(0);
+	}
+	
+	/**
+	 * @param problemlevel
+	 * @param papernum
+	 * @return
+	 */
+	// 获取试卷多选题目
+	public List<Map> getExamPaper(String problemlevel, int papernum) {
+		String hql = "select new map(t.seProblemDuoXuan.id as id, t.seProblemDuoXuan.problemlevel as problemlevel, t.seProblemDuoXuan.mustright as mustright,t.seProblemDuoXuan.keyproblem as keyproblem, t.seProblemDuoXuan.question as question, t.seProblemDuoXuan.option1 as option1, t.seProblemDuoXuan.option2 as option2, t.seProblemDuoXuan.option3 as option3, t.seProblemDuoXuan.option4 as option4,"
+				+ "t.seProblemDuoXuan.seQuestionBank.id as subid) from com.egov.secrecysystem.model.SePaperDuoXuan t where t.userlevel =:problemlevel and t.papernum =:papernum";
+		Query query = this.getCurrentSession().createQuery(hql);
+		return query.setParameter("problemlevel", problemlevel).setParameter("papernum", papernum).list();
+	}
+	// 查看试卷
+		public List<Map> selectExamPaper(String problemlevel, int papernum) {
+			String hql = "select new map(t.seProblemDuoXuan.id as id, t.seProblemDuoXuan.problemlevel as problemlevel, t.seProblemDuoXuan.mustright as mustright,t.seProblemDuoXuan.keyproblem as keyproblem, t.seProblemDuoXuan.question as question, t.seProblemDuoXuan.option1 as option1, t.seProblemDuoXuan.option2 as option2, t.seProblemDuoXuan.option3 as option3, t.seProblemDuoXuan.option4 as option4,"
+					+ "t.seProblemDuoXuan.answer as answer,t.seProblemDuoXuan.seQuestionBank.id as subid) from com.egov.secrecysystem.model.SePaperDuoXuan t where t.userlevel =:problemlevel and t.papernum =:papernum";
+			Query query = this.getCurrentSession().createQuery(hql);
+			return query.setParameter("problemlevel", problemlevel).setParameter("papernum", papernum).list();
+		}
+}

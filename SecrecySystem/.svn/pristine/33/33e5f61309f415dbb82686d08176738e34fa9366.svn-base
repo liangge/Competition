@@ -1,0 +1,61 @@
+package com.egov.secrecysystem.dao;
+
+import java.util.List;
+import java.util.Map;
+
+import org.hibernate.Query;
+
+import com.egov.secrecysystem.model.SePaperDanXuan;
+import com.egov.secrecysystem.model.SePaperPanDuan;;
+
+
+public class PaperPanDuanDao  extends AbstractHibernateDao<SePaperPanDuan> {
+
+	PaperPanDuanDao(){
+		super(SePaperPanDuan.class);
+	}
+	
+	// 获取某一条单选出卷记录
+	public SePaperPanDuan findPaperPanduan(String id,String userlevel,int papernum) {
+		String hql = "from com.egov.secrecysystem.model.SePaperPanDuan t where t.papernum =:papernum and userlevel =:userlevel and t.seProblemPanDuan.id =:id ";
+		Query query = this.getCurrentSession().createQuery(hql);
+		query.setParameter("papernum", papernum);
+		query.setParameter("userlevel", userlevel);
+		query.setParameter("id", id);
+		List<SePaperPanDuan> list = query.list();
+		if(list.size() < 1) {
+			return null;
+		}
+		return list.get(0);
+	}
+	
+	/**
+	 * @param problemlevel
+	 * @param papernum
+	 * @return
+	 */
+	// 获取试卷多选题目
+	public List<Map> getExamPaper(String problemlevel, int papernum) {
+		System.out.println("参数信息如下 ： problemlevel = " + problemlevel + "papernum = " + papernum);
+		String hql = "select new map(t.seProblemPanDuan.id as id, t.seProblemPanDuan.problemlevel as problemlevel, t.seProblemPanDuan.mustright as mustright,t.seProblemPanDuan.keyproblem as keyproblem, t.seProblemPanDuan.question as question,"
+				+ "t.seProblemPanDuan.seQuestionBank.id as subid) from com.egov.secrecysystem.model.SePaperPanDuan t where t.papernum =:papernum and userlevel =:userlevel ";
+		
+		Query query = this.getCurrentSession().createQuery(hql);
+		query.setParameter("papernum", papernum);
+		query.setParameter("userlevel", problemlevel);
+		List<Map> list = query.list();
+		return list;
+	}
+	// 查看试卷
+		public List<Map> selectExamPaper(String problemlevel, int papernum) {
+			System.out.println("参数信息如下 ： problemlevel = " + problemlevel + "papernum = " + papernum);
+			String hql = "select new map(t.seProblemPanDuan.id as id, t.seProblemPanDuan.problemlevel as problemlevel, t.seProblemPanDuan.mustright as mustright,t.seProblemPanDuan.keyproblem as keyproblem, t.seProblemPanDuan.question as question,"
+					+ "t.seProblemPanDuan.answer as answer,t.seProblemPanDuan.seQuestionBank.id as subid) from com.egov.secrecysystem.model.SePaperPanDuan t where t.papernum =:papernum and userlevel =:userlevel ";
+			
+			Query query = this.getCurrentSession().createQuery(hql);
+			query.setParameter("papernum", papernum);
+			query.setParameter("userlevel", problemlevel);
+			List<Map> list = query.list();
+			return list;
+		}
+}

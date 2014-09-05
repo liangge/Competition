@@ -1,0 +1,560 @@
+var instructor_currentSearchFilter = "";
+
+var problemlevel = '000';   // 记录题目等级
+var type = '0';    // 记录题目类型,全部，必考等...
+var nameLike = "";
+
+var problemlevelStore = new Ext.data.JsonStore({
+	fields:[
+	        'problemlevel',
+	        'levelname'
+	        ]
+}); 
+
+var typeStore = new Ext.data.JsonStore({
+	fields:['type',
+	        'typename']
+});
+
+var typeData = [
+		{'type':'0','typename':'全部类型'},{'type':'1','typename':'必对题目'},{'type':'2','typename':'关键题目'}
+];
+
+var seanswer = new Ext.data.Record.create([ {
+	name : 'id'
+}, {
+	name : 'problemlevel'
+}, {
+	name : 'mustright'
+}, {
+	name : 'keyproblem'
+}, {
+	name : 'question'
+}, {
+	name : 'option1'
+}, {
+	name : 'option2'
+}, {
+	name : 'option3'
+}, {
+	name : 'option4'
+}, {
+	name : 'answer'
+}, {
+	name : 'problemnum'
+} , {
+	name : 'rate'
+} 
+]);
+
+var instructorstore = new Ext.data.Store({
+	reader : new Ext.data.JsonReader({
+		totalProperty : 'totalProperty',
+		root : 'root'
+	}, seanswer),
+	proxy : new Ext.ux.data.DWRProxy({
+		dwrFunction : AnswerRecordDuoXuanController.getAnswerRateShow
+	})
+});
+
+
+var form = new Ext.form.FormPanel({
+	   title:"选择查询条件",
+	   region:"north",
+	   frame:true,
+	   width:300,
+	   height:65,			  
+	   labelAlign:'right',
+	   items:[{
+		 layout:'column',
+		 items:[{
+			  columnWidth:.3,	
+			  layout:'form',	
+			  labelWidth:60,
+			  items:[{
+	        	     xtype:'combo',
+	        	     fieldLabel:'保密等级',
+	        	     hiddenName:'problemlevel',
+	        	     triggerAction:'all',
+	        	     store:problemlevelStore,
+	        	     displayField:'levelname',
+	        	     valueField:'problemlevel',			        	  
+	        	     mode:'local',
+	        	     anchor:'97.5%',
+	        	     editable:false,
+	        	     allowBlank: false,
+	        	     emptyText:'---请选择---'		        	     
+	        	    }] 
+	          },{
+	        	  columnWidth:.3,	
+	        	  layout:'form',
+	        	  labelWidth:60,
+				  items:[{
+		        	     xtype:'combo',
+		        	     fieldLabel:'题目类型',
+		        	     hiddenName:'type',
+		        	     triggerAction:'all',
+		        	     store:typeStore,
+		        	     displayField:'typename',
+		        	     valueField:'type',			        	  
+		        	     mode:'local',
+		        	     anchor:'97.5%',
+		        	     editable:false,
+		        	     allowBlank: false,
+		        	     emptyText:'---请选择---'
+				  }]
+			      
+		          },{
+			        	  columnWidth:.1,	
+			        	  layout:'form',
+			        	  items:[{
+							  xtype:'button',
+							  text:'查询统计',
+							  anchor:'97.5%',
+							   handler : function() {
+						        	if(form.getForm().isValid()){
+							         	var summaryCondition = form.getForm().getValues();
+							         	problemlevel = summaryCondition.problemlevel;
+							         	type = summaryCondition.type; 
+							         	DuoxuanSummaryGridInit(problemlevel, type);
+						        	}else{
+						        		Ext.MessageBox.alert('提示',"输入统计条件有误！");
+						        	}
+						         }
+						   }]
+					     }
+		           ]				 
+		   }]			   		   
+});
+
+
+var instructorfields = [ {
+	columnWidth : .3,
+	layout : 'form',
+	items : [ {
+		xtype : 'hidden',
+		name : 'id',
+		anchor : '95%'
+	}, {
+		xtype : 'textfield',
+		id : 'problemlevel',
+		fieldLabel : '多选题等级',
+		name : 'problemlevel',
+		anchor : '97.5%',
+		allowBlank : false
+	} ]
+}, {
+	columnWidth : .3,
+	layout : 'form',
+	items : [ {
+		xtype : 'textfield',
+		id : 'mustright',
+		fieldLabel : '必对题',
+		name : 'mustright',
+		anchor : '97.5%',
+		allowBlank : false
+	} ]
+}, {
+	columnWidth : .3,
+	layout : 'form',
+	items : [ {
+		xtype : 'textfield',
+		fieldLabel : '关键题',
+		id : 'keyproblem',
+		name : 'keyproblem',
+		anchor : '97.5%',
+		//maxLength : 55,
+		allowBlank : false
+	} ]
+}, {
+	columnWidth : .9,
+	layout : 'form',
+	items : [ {
+		xtype : 'textfield',
+		id : 'question',
+		fieldLabel : '题   目',
+		name : 'question',
+		anchor : '97.5%',
+		allowBlank : false
+	} ]
+}, {
+	columnWidth : .9,
+	layout : 'form',
+	items : [ {
+		xtype : 'textfield',
+		id : 'option1',
+		fieldLabel : '选 项 1',
+		name : 'option1',
+		anchor : '97.5%',
+		allowBlank : false
+	} ]
+}, {
+	columnWidth : .9,
+	layout : 'form',
+	items : [ {
+		xtype : 'textfield',
+		id : 'option2',
+		fieldLabel : '选 项 2',
+		name : 'option2',
+		anchor : '97.5%',
+		allowBlank : false
+	} ]
+}, {
+	columnWidth : .9,
+	layout : 'form',
+	items : [ {
+		xtype : 'textfield',
+		id : 'option3',
+		fieldLabel : '选 项 3',
+		name : 'option3',
+		anchor : '97.5%',
+		allowBlank : false
+	} ]
+}, {
+	columnWidth : .9,
+	layout : 'form',
+	items : [ {
+		xtype : 'textfield',
+		id : 'option4',
+		fieldLabel : '选 项 4',
+		name : 'option4',
+		anchor : '97.5%',
+		allowBlank : false
+	} ]
+}, {
+	columnWidth : .3,
+	layout : 'form',
+	items : [ {
+		xtype : 'textfield',
+		id : 'answer',
+		fieldLabel : '答  案',
+		name : 'answer',
+		anchor : '97.5%'
+	} ]
+}, {
+	columnWidth : .3,
+	layout : 'form',
+	items : [ {
+		xtype : 'textfield',
+		id : 'problemnum',
+		fieldLabel : '问题编号',
+		name : 'problemnum',
+		anchor : '97.5%'
+	} ]
+} ];
+
+var college_instructorbasicform = new Ext.FormPanel({
+	id : 'college_instructorbasicform',
+	width : 600,
+	labelWidth : 65,
+	region : 'center',
+	labelAlign : 'left',
+	layout : 'column',
+	items : [ instructorfields ]
+});
+
+
+function enableOfInstructorbasicform() {
+	Ext.getCmp("problemlevel").setDisabled(false);
+	// Ext.getCmp("id").setDisabled(false);
+	Ext.getCmp("mustright").setDisabled(false);
+	Ext.getCmp("keyproblem").setDisabled(false);
+	Ext.getCmp("question").setDisabled(false);
+	Ext.getCmp("option1").setDisabled(false);
+	Ext.getCmp("option2").setDisabled(false);
+	Ext.getCmp("option3").setDisabled(false);
+	Ext.getCmp("option4").setDisabled(false);
+	Ext.getCmp("answer").setDisabled(false);
+	Ext.getCmp("problemnum").setDisabled(false);
+}
+
+var instructor_searchform = new Ext.form.FormPanel({
+	id : 'instructor_searchform',
+	region : 'center',
+	frame : true,
+	labelWidth : 68,
+	height : 100,
+	items : [{
+			columnWidth : .5,
+			layout : 'form',
+			items : [ {
+				xtype : 'textfield',
+				fieldLabel : '题  目',
+				id : 'nameLike',
+				anchor : '96%'
+			} ]
+		}],
+	keys : [ {
+		key : 13,// 回车
+		fn : function() {
+			instructor_search(problemlevel , type);
+			instructor_searchWin.hide();
+		}
+	} ]
+});
+
+var instructor_searchWin = new Ext.Window({
+	title : '按题目模糊查询',
+	width : 500,
+	autoHeight : true,
+	minWidth : 300,
+	minHeight : 200,
+	closeAction : 'hide',
+	layout : 'fit',
+	plain : true,
+	buttonAlign : 'center',
+	items : [ instructor_searchform ],
+	modal : true,
+	shadow : true,
+	buttons : [ {
+		text : '查询',
+		handler : function() {
+			instructor_search(problemlevel , type);
+			instructor_searchWin.hide();
+		}
+	}, {
+		text : '清空',
+		handler : function() {
+			instructor_searchform.getForm().reset();
+			instructor_currentSearchFilter = "";
+		}
+	}, {
+		text : '关闭',
+		handler : function() {
+			instructor_searchWin.hide();
+		}
+	} ]
+});
+
+function merge_type(val, x, store) {
+	var str = '<br><b>';
+	if(val == '0') {
+		str += '共同题目';
+	} else {
+		str += val + '级保密题目';
+	}
+	str += '</b><br>';
+	if(store.data.mustright == '1') {
+		str += '必对题' + '<br>';
+	}
+	
+	if(store.data.keyproblem == '1') {
+		str += '关键题' + '<br>';
+	}
+	return str;
+}
+
+function merge_problem(val, x ,store) {
+	return '<br><b>' + val + '</b><br>' + '  A. '+store.data.option1 + '<br>' + '  B. '+store.data.option2 + '<br>' + '  C. '+store.data.option3 + '<br>' + '  D. ' +store.data.option4 + '<br>';
+}
+
+function juzhong(val) {
+	return '<br><br>' + val;
+}
+
+function renderRed(value) {
+	// return "<span style='color:red;font-weight:bold;'>" + value + "</span>";
+	return '<br><br>' + '<font color=blue></font><span style="background-color:#FF0000;display:block;width:'+ value +'%;">' + value + '%</span>';
+}
+
+var instructorgrid = new Ext.grid.GridPanel({
+	region : 'center',
+	id : 'instructorgrid',
+	store : instructorstore,
+	loadMask : true,
+	width : 5000,
+	stripeRows : true,
+	autoScroll : true,
+	viewConfig : {
+		sortDescText : '降序',
+		sortAscText : '升序',
+		columnsText : '显示列',
+		forceFit : false
+	},
+	columns : [ new Ext.grid.RowNumberer({
+		width : 28
+	}), {
+		id : 'problemlevel',
+		header : '多选题等级及类型',
+		dataIndex : 'problemlevel',
+		width : 180,
+		sortable : true,
+		renderer : merge_type
+	}, {
+		id : 'mustright',
+		header : '必对题',
+		dataIndex : 'mustright',
+		width : 80,
+		sortable : true,
+		hidden : true,
+		hidden : true
+	}, {
+		id : 'keyproblem',
+		header : '关 键 题',
+		dataIndex : 'keyproblem',
+		width : 80,
+		sortable : true,
+		hidden : true
+	}, {
+		id : 'question',
+		header : '题   目',
+		dataIndex : 'question',
+		width : 500,
+		sortable : true,
+		renderer : merge_problem
+	}, {
+		id : 'option1',
+		header : '选  项  1',
+		dataIndex : 'option1',
+		width : 150,
+		sortable : true,
+		hidden : true
+	}, {
+		id : 'option2',
+		header : '选  项  2',
+		dataIndex : 'option2',
+		width : 150,
+		sortable : true,
+		hidden : true
+	}, {
+		id : 'option3',
+		header : '选  项  3',
+		dataIndex : 'option3',
+		width : 150,
+		sortable : true,
+		hidden : true
+	}, {
+		id : 'option4',
+		header : '选  项  4',
+		dataIndex : 'option4',
+		width : 150,
+		sortable : true,
+		hidden : true
+	}, {
+		id : 'answer',
+		header : '答   案',
+		dataIndex : 'answer',
+		width : 80,
+		sortable : true,
+		renderer : juzhong
+	}, {
+		id : 'problemnum',
+		header : '问题编号',
+		dataIndex : 'problemnum',
+		width : 80,
+		sortable : true,
+		renderer : juzhong,
+		hidden : true
+	} , {
+		id : 'rate',
+		header : '错误率',
+		dataIndex : 'rate',
+		width : 180,
+		sortable : true,
+		renderer : renderRed
+	}],
+	tbar : [ {
+				text : '按题目模糊查询',
+				iconCls : 'upload-icon',
+				scope : this,
+				handler : function() {
+					instructor_searchWin.show();
+					instructor_searchform.getForm().reset();
+				}
+			}
+
+	],
+	bbar : new Ext.PagingToolbar({
+		pageSize : 20,
+		store : instructorstore,
+		displayInfo : true,
+		firstText : '首页',
+		lastText : '尾页',
+		prevText : '上一页',
+		nextText : '下一页',
+		refreshText : '刷新',
+		displayMsg : '显示第 {0} 条到 {1} 条记录，一共 {2} 条',
+		emptyMsg : "没有记录",
+		doLoad : function(start) {
+			var params = {};
+			params.filter = instructor_currentSearchFilter;
+			params.start = start;
+			params.limit = this.pageSize;
+			params.level = problemlevel;
+			params.type = type;
+			params.nameLike = nameLike;
+			
+			if (this.fireEvent("beforechange", this, params) !== false) {
+				this.store.load({
+					params : params
+				});
+			}
+		}
+	}),
+	listeners : {
+		rowdblclick : function(grid) {
+			enableOfInstructorbasicform();
+			if (grid.getSelectionModel().hasSelection()) {
+				instructorInfoWinInit("编辑多选题信息").show();
+				college_instructorbasicform.getForm().setValues(
+						grid.getSelectionModel().getSelected().data);
+			} else {
+				Ext.MessageBox.alert('提示', "请选择一条信息进行编辑!");
+			}
+
+		}
+	}
+});
+
+
+function instructor_search(problemlevel , type) {
+	// instructor_currentSearchFilter = Ext.encode(instructor_searchform.getForm().getFieldValues());
+	nameLike = Ext.getCmp("nameLike").getValue();
+	instructorstore.load({
+		params : {
+			filter : instructor_currentSearchFilter,
+			start : 0,
+			limit : 20,
+			level : problemlevel,
+			type : type,
+			nameLike : nameLike
+		}
+	});
+}
+
+
+function DuoxuanSummaryGridInit(problemlevel , type) {
+	// 加载多选题错误率数据信息
+	instructorstore.load({
+		params : {
+			filter : instructor_currentSearchFilter,
+			start : 0,
+			limit : 20,
+			level : problemlevel,
+			type : type,
+			nameLike : nameLike
+		}
+	});
+}
+// 获取多选题保密等级List信息
+function WindowInit(){
+	// 获取多选题保密等级List信息
+	ProblemDuoXuanController.getProblemLevelList(function(data){
+			if(data){
+				// 加载数据
+				problemlevelStore.loadData(data);
+			}
+	  	}); 
+	typeStore.loadData(typeData);
+}
+// 初始化
+function DuoxuanSummaryInfoPageInit() {
+	new Ext.Viewport({
+		layout : 'border',
+		hideMode : Ext.isIE ? 'offsets' : 'display',
+		items : [form, instructorgrid ],
+		renderTo : Ext.getBody()
+	});
+	WindowInit();
+	DuoxuanSummaryGridInit(problemlevel, type);
+}

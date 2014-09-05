@@ -1,0 +1,163 @@
+package com.egov.secrecysystem.dao;
+
+import java.util.List;
+import java.util.Map;
+
+import org.hibernate.Query;
+
+import org.hibernate.Session;
+import org.json.simple.JSONObject;
+
+import com.egov.secrecysystem.model.SeScoreRecord;
+
+public class ScoreRecordDao extends AbstractHibernateDao<SeScoreRecord> {
+
+	ScoreRecordDao() {
+		super(SeScoreRecord.class);
+	}
+
+	public Session getSession() {
+		return this.getCurrentSession();
+	}
+	
+	// 得到一个学校各个部门某次考试不及格的成绩人数
+	public List<Map> getScoreInfo_1(int papernum, JSONObject summaryCondition) {
+		int passLine = Integer.parseInt(summaryCondition.get("passLine")
+				.toString()); // 得到及格线
+		// BigDecimal passLine = new BigDecimal(passline);
+		String hql = "select new map(score.seUser.remark as remark,count(score) as usercount) from com.egov.secrecysystem.model.SeScoreRecord score where score.seTestPaperRecord.papernum =:papernum and score.totalscore<:passLine group by score.seUser.remark ";
+		return (List<Map>) this.getCurrentSession().createQuery(hql)
+				.setParameter("papernum", papernum)
+				.setParameter("passLine", passLine).list();
+	}
+
+	// 得到一个学校各个部门某次考试及格的成绩人数
+	public List<Map> getScoreInfo_2(int papernum, JSONObject summaryCondition) {
+		int passLine = Integer.parseInt(summaryCondition.get("passLine")
+				.toString()); // 得到及格线
+		// BigDecimal passLine = new BigDecimal(passline);
+		String hql = "select new map(score.seUser.remark as remark,count(score) as usercount) from com.egov.secrecysystem.model.SeScoreRecord score where score.seTestPaperRecord.papernum =:papernum and score.totalscore>=:passLine group by score.seUser.remark ";
+		return (List<Map>) this.getCurrentSession().createQuery(hql)
+				.setParameter("papernum", papernum)
+				.setParameter("passLine", passLine).list();
+	}
+
+	// 得到一个学校各个部门某次考试优秀的成绩人数
+	public List<Map> getScoreInfo_3(int papernum, JSONObject summaryCondition) {
+		int excellentLine = Integer.parseInt(summaryCondition.get(
+				"excellentLine").toString()); // 得到及格线
+		// BigDecimal passLine = new BigDecimal(passline);
+		String hql = "select new map(score.seUser.remark as remark,count(score) as usercount) from com.egov.secrecysystem.model.SeScoreRecord score where score.seTestPaperRecord.papernum =:papernum and score.totalscore>=:excellentLine group by score.seUser.remark ";
+		return (List<Map>) this.getCurrentSession().createQuery(hql)
+				.setParameter("papernum", papernum)
+				.setParameter("excellentLine", excellentLine).list();
+	}
+
+	// 得到一个学校各个部门某次考试不及格的成绩人数
+	public List<Map> getScoreInfoByYear_1(String remark,
+			JSONObject summaryCondition) {
+		int passLine = Integer.parseInt(summaryCondition.get("passLine")
+				.toString()); // 得到及格线
+		// BigDecimal passLine = new BigDecimal(passline);
+		String hql = "select new map(score.seTestPaperRecord.starttime as starttime ,count(score) as usercount) from com.egov.secrecysystem.model.SeScoreRecord score where score.seUser.remark =:remark and score.totalscore<:passLine group by score.seTestPaperRecord.starttime";
+		return (List<Map>) this.getCurrentSession().createQuery(hql)
+				.setParameter("remark", remark)
+				.setParameter("passLine", passLine).list();
+	}
+
+	// 得到一个学校各个部门某次考试及格的成绩人数
+	public List<Map> getScoreInfoByYear_2(String remark,
+			JSONObject summaryCondition) {
+		int passLine = Integer.parseInt(summaryCondition.get("passLine")
+				.toString()); // 得到及格线
+		// BigDecimal passLine = new BigDecimal(passline);
+		String hql = "select new map(score.seTestPaperRecord.starttime as starttime ,count(score) as usercount) from com.egov.secrecysystem.model.SeScoreRecord score where score.seUser.remark =:remark and score.totalscore>=:passLine group by score.seTestPaperRecord.starttime";
+		return (List<Map>) this.getCurrentSession().createQuery(hql)
+				.setParameter("remark", remark)
+				.setParameter("passLine", passLine).list();
+	}
+
+	// 得到一个学校各个部门某次考试优秀的成绩人数
+	public List<Map> getScoreInfoByYear_3(String remark,
+			JSONObject summaryCondition) {
+		int excellentLine = Integer.parseInt(summaryCondition.get(
+				"excellentLine").toString()); // 得到及格线
+		// BigDecimal passLine = new BigDecimal(passline);
+		String hql = "select new map(score.seTestPaperRecord.starttime as starttime ,count(score) as usercount) from com.egov.secrecysystem.model.SeScoreRecord score where score.seUser.remark =:remark and score.totalscore>=:excellentLine group by score.seTestPaperRecord.starttime";
+		return (List<Map>) this.getCurrentSession().createQuery(hql)
+				.setParameter("remark", remark)
+				.setParameter("excellentLine", excellentLine).list();
+	}
+
+	//查询成绩
+	public List<Map> selectScoreByLoginName(String loginname){
+		String hql = "select new map(t.seUser.name as name,t.seUser.loginname as loginname, t.danxuanscore as danxuanscore, t.duoxuanscore as duoxuanscore,"
+				+ "t.panduanscore as panduanscore, t.totalscore as totalscore, t.seUser.remark as remark,t.scoreremark as scoreremark,"
+				+ "t.seTestPaperRecord.starttime as starttime,t.seTestPaperRecord.examname as examname"
+				+ ") from com.egov.secrecysystem.model.SeScoreRecord t where t.seUser.loginname =:loginname";
+		List<Map> list = this.getCurrentSession().createQuery(hql)
+				.setParameter("loginname", loginname).list();
+ 		return list;
+	}
+	// 得到分数信息
+	public List<Map> getPageScoreRecord(String whereString,
+			Map<String, Object> valuesMap, int pageNum, int pageSize, int papernum) {
+		
+		String hql = "select new map(t.id as id, t.seUser.name as name,t.seUser.loginname as loginname, t.danxuanscore as danxuanscore, t.duoxuanscore as duoxuanscore,"
+					+ "t.panduanscore as panduanscore, t.totalscore as totalscore, t.seUser.remark as remark,t.scoreremark as scoreremark"
+					+ ") from com.egov.secrecysystem.model.SeScoreRecord t";
+		
+		hql += whereString;
+		if(papernum != 0) {
+			hql += " and t.seTestPaperRecord.papernum =:papernum";
+		}
+		System.out.println("查询语句 ：" + hql);
+		hql += " order by t.id ";
+		Query query = this.getCurrentSession().createQuery(hql)
+				.setFirstResult(pageNum).setMaxResults(pageSize);
+		String[] perchs = valuesMap.keySet().toArray(new String[0]);
+		
+		if(papernum != 0) {
+			query.setParameter("papernum", papernum);
+		}
+		for (int i = 0; i < perchs.length; i++) {
+
+			query.setParameter(perchs[i], valuesMap.get(perchs[i]));
+		}
+
+		return query.list();
+	}
+
+	// 得到分数的总记录数
+	public long getScoreRecordTotalCount(String whereString,
+			Map<String, Object> valuesMap) {
+		String hql = "select t from com.egov.secrecysystem.model.SeScoreRecord t ";
+		hql += whereString;
+		hql += " and t is not null";
+		Query query = this.getCurrentSession().createQuery(hql);
+		String[] perchs = valuesMap.keySet().toArray(new String[0]);
+		for (int i = 0; i < perchs.length; i++) {
+			query.setParameter(perchs[i], valuesMap.get(perchs[i]));
+		}
+		return query.list().size();
+	}
+
+	// 要导出的分数信息
+	public List<Map> getScoreRecordInfoExcel(int papernum) {
+
+		String hql = "select new map(e.seUser.name as name,e.seUser.loginname as loginname,"
+				+ "e.danxuanscore as danxuanscore,e.duoxuanscore as duoxuanscore,e.panduanscore as panduanscore,e.totalscore as totalscore,"
+				+ "e.seUser.remark as remark,e.seTestPaperRecord.starttime as starttime,e.scoreremark as scoreremark) "
+				+ "from com.egov.secrecysystem.model.SeScoreRecord e";
+		if(papernum !=0){
+			hql += " where e.seTestPaperRecord.papernum =:papernum";
+		}
+		hql += " order by e.id ";
+		Query query = this.getCurrentSession().createQuery(hql);
+		if(papernum !=0){
+			query.setParameter("papernum",papernum);
+		}
+		return query.list();
+
+	}
+}

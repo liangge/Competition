@@ -1,0 +1,56 @@
+var titlename = new Ext.data.Record.create([ {
+	name : 'id'
+}, {
+	name : 'title'
+}
+]);
+
+var newstitle = new Ext.data.Record.create([ {
+	name : 'id'
+}, {
+	name : 'title'
+}, {
+	name : 'date'
+}, {
+	name : 'jsp'
+}
+]);
+
+var titleStore = new Ext.data.Store( {
+	reader : new Ext.data.JsonReader({
+	     totalProperty : 'totalProperty',
+	     root : 'root'
+	  }, titlename),
+	proxy : new Ext.ux.data.DWRProxy({
+	     dwrFunction : ProblemDanXuanController.changeProblemByHander
+	  })
+});
+
+var newsTitleStore = new Ext.data.Store( {
+	reader : new Ext.data.JsonReader({
+	     totalProperty : 'totalProperty',
+	     root : 'root'
+	  }, newstitle),
+	proxy : new Ext.ux.data.DWRProxy({
+	     dwrFunction : ProblemDanXuanController.changeProblemByHander
+	  })
+});
+
+// 初始化加载数据
+function initTitlename(titleString) {
+	var titleJsonArray = Ext.util.JSON.decode(data);
+	for (var i = 0; i < titleJsonArray.length; i++) {
+		var titleJSON = titleJsonArray[i];
+		
+	}
+/*	titleStore.load({
+		params : {
+		},callback: function(data) {
+			
+		}
+	});*/
+	
+}
+function regulationInfoManagerPageInit() {
+	initTitlename(titleString);
+}

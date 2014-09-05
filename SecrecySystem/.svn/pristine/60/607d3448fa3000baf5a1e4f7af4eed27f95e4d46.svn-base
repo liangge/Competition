@@ -1,0 +1,61 @@
+package com.egov.secrecysystem.controller;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.directwebremoting.annotations.RemoteMethod;
+import org.directwebremoting.annotations.RemoteProxy;
+import org.directwebremoting.spring.SpringCreator;
+import org.json.simple.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.egov.secrecysystem.model.Function;
+import com.egov.secrecysystem.service.TestPaperRecordService;
+
+@RemoteProxy(creator = SpringCreator.class)
+public class TestPaperRecordController {
+	@Autowired
+	private TestPaperRecordService testPaperRecordService;
+	
+	@RemoteMethod
+	public List<Map> getPaperNumList() {
+		return testPaperRecordService.getPaperNumList();
+	}
+	//获取最新的出卷记录
+	@RemoteMethod
+	public Map getTestPaperRecordList() {
+		List<Map> result = testPaperRecordService.getTestPaperRecordList();
+		
+		Map map = new HashMap();
+		map.put("totalProperty",1);
+		map.put("root", result);
+		return map;
+	}
+	@RemoteMethod
+	//根据考生的loginname判断是否已经参加过本次考试
+	public boolean judgeWhetherTheUserIsExamed(String loginName,String paperNum){
+		return testPaperRecordService.judgeWhetherTheUserIsExamed(loginName,paperNum);
+	}
+	
+	/**
+	 * @author LiangGe
+	 * @return
+	 */
+	@RemoteMethod
+	public int savePaperInfo(JSONObject papercondition) {
+		Map map = new HashMap();
+		int papernum = testPaperRecordService.savePaperInfo(papercondition);
+		return papernum;
+	}
+	
+	/**
+	 * @author LiangGe
+	 * @param papercondition
+	 * @return
+	 */
+	@RemoteMethod
+	public boolean modifyPaperInfo(JSONObject papercondition) {
+		return testPaperRecordService.modifyPaperInfo(papercondition);
+	}
+}

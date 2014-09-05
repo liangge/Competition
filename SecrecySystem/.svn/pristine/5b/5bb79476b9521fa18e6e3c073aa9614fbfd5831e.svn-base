@@ -1,0 +1,30 @@
+package com.egov.secrecysystem.controller;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.directwebremoting.annotations.RemoteMethod;
+import org.directwebremoting.annotations.RemoteProxy;
+import org.directwebremoting.spring.SpringCreator;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.egov.secrecysystem.model.Function;
+import com.egov.secrecysystem.service.PaperPanDuanService;
+
+
+@RemoteProxy(creator = SpringCreator.class)
+public class PaperPanDuanController {
+	@Autowired
+	private PaperPanDuanService paperPanDuanService;
+	//查看考卷
+	@RemoteMethod
+	public Map selectExamPaper(String problemlevel, String papernum) {
+		Map map = new HashMap();
+		List<Map> result = null;
+		result = paperPanDuanService.selectExamPaper(problemlevel,Integer.parseInt(papernum));
+		map.put("totalProperty", result.size());
+		map.put("root", result);
+		return map;
+	}
+}

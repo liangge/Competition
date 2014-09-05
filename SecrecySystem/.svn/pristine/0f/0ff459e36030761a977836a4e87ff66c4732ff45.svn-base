@@ -1,0 +1,556 @@
+var paperInfoCondition;
+// 涉密人员等级
+var userlevelStore = new Ext.data.JsonStore({
+	fields : [ 'userlevel', 'userlevelname' ]
+});
+
+var comnoPaperNumStore = new Ext.data.JsonStore({
+	fields : [ 'papernum', 'examname' ]
+});
+
+var xuanzeQuestion = new Ext.data.Record.create([ {
+	name : 'id'
+}, {
+	name : 'problemlevel'
+}, {
+	name : 'mustright'
+}, {
+	name : 'keyproblem'
+}, {
+	name : 'question'
+}, {
+	name : 'option1'
+}, {
+	name : 'option2'
+}, {
+	name : 'option3'
+}, {
+	name : 'option4'
+}, {
+	name : 'answer'
+}, {
+	name : 'subid'
+}]);
+
+var panduanQuestion = new Ext.data.Record.create([ {
+	name : 'id'
+}, {
+	name : 'problemlevel'
+}, {
+	name : 'mustright'
+}, {
+	name : 'keyproblem'
+}, {
+	name : 'question'
+},{
+	name : 'answer'
+}, {
+	name : 'subid'
+} ]);
+
+var danxuanQuestionStore = new Ext.data.Store({
+	reader : new Ext.data.JsonReader({
+		totalProperty : 'totalProperty',
+		root : 'root'
+	}, xuanzeQuestion),
+	proxy : new Ext.ux.data.DWRProxy({
+		dwrFunction : PaperDanXuanController.selectExamPaper
+	})
+});
+
+var duoxuanQuestionStore = new Ext.data.Store({
+	reader : new Ext.data.JsonReader({
+		totalProperty : 'totalProperty',
+		root : 'root'
+	}, xuanzeQuestion),
+	proxy : new Ext.ux.data.DWRProxy({
+		dwrFunction : PaperDuoXuanController.selectExamPaper
+	})
+});
+
+var panduanQuestionStore = new Ext.data.Store({
+	reader : new Ext.data.JsonReader({
+		totalProperty : 'totalProperty',
+		root : 'root'
+	}, panduanQuestion),
+	proxy : new Ext.ux.data.DWRProxy({
+		dwrFunction : PaperPanDuanController.selectExamPaper
+	})
+});
+
+// 试卷题目初始化获取
+function danxuanQuestionStoreInit() {
+	danxuanQuestionStore.load({
+		params : {
+			problemlevel : paperInfoCondition.userlevel,
+			papernum : paperInfoCondition.papernum
+		}
+	});
+}
+
+// 多选store取值
+function duoxuanQuestionStoreInit() {
+	duoxuanQuestionStore.load({
+		params : {
+			problemlevel : paperInfoCondition.userlevel,
+			papernum : paperInfoCondition.papernum
+		}
+	});
+}
+
+// 判断store取值
+function panduanQuestionStoreInit() {
+	panduanQuestionStore.load({
+		params : {
+			problemlevel : paperInfoCondition.userlevel,
+			papernum : paperInfoCondition.papernum
+		}
+	});
+}
+
+function loadAllQuestionStore() {
+	danxuanQuestionStoreInit();
+	duoxuanQuestionStoreInit();
+	panduanQuestionStoreInit();
+}
+
+// 按钮触发
+function generateExamPaperByLevel() {
+	if (paperGenerateInfoForm.getForm().isValid()) {
+		paperInfoCondition = paperGenerateInfoForm.getForm().getValues();
+		// 如果还没有考试的时间信息
+
+		loadAllQuestionStore();
+
+	} else {
+		Ext.MessageBox.alert('提示', "请先填写考卷基本信息！");
+	}
+}
+
+// 考试出卷填写基本信息
+var paperGenerateInfoForm = new Ext.form.FormPanel({
+	title : "考试基本信息",
+	region : "north",
+	frame : true,
+	height : 80,
+	labelAlign : 'right',
+	// layout : 'column',
+	items : [ {
+		layout : 'column',
+		items : [ {
+			columnWidth : .3,
+			layout : 'form',
+			labelWidth : 70,
+			items : [ {
+				xtype : 'combo',
+				fieldLabel : '涉密人员',
+				hiddenName : 'userlevel',
+				triggerAction : 'all',
+				store : userlevelStore,
+				displayField : 'userlevelname',
+				valueField : 'userlevel',
+				mode : 'local',
+				anchor : '70%',
+				editable : false,
+				allowBlank : false,
+				emptyText : '---请选择---'
+			} ]
+		}, {
+			columnWidth : 0.5,
+			layout : 'form',
+			height : 150,
+			items : [ {
+				xtype : 'combo',
+				// id:"papernum",
+				fieldLabel : '具体考试',
+				hiddenName : 'papernum',
+				triggerAction : 'all',
+				store : comnoPaperNumStore,
+				displayField : 'examname',
+				valueField : 'papernum',
+				mode : 'local',
+				anchor : '70%',
+				editable : false,
+				allowBlank : false,
+				emptyText : '---请选择---'
+			} ]
+		}, {
+			columnWidth : .2,
+			layout : 'form',
+			labelWidth : 60,
+			items : [ {
+				xtype : 'button',
+				text : '查看考卷',
+				//style : "position:relative;top:5px;",
+				anchor : '30%',
+				handler : generateExamPaperByLevel
+			} ]
+		} ]
+	} ]
+});
+
+function merge_problem(val, x, store) {
+	return '<b>' + val + '</b>' + '<br>' + '&nbsp;&nbsp;&nbsp;A. '
+			+ store.data.option1 + '<br>' + '&nbsp;&nbsp;&nbsp;B. '
+			+ store.data.option2 + '<br>' + '&nbsp;&nbsp;&nbsp;C. '
+			+ store.data.option3 + '<br>' + '&nbsp;&nbsp;&nbsp;D. '
+			+ store.data.option4 + '<br>' + '<br>';
+}
+
+function panduan_problem(val, x, store) {
+	return '<b>' + val + '</b>' + '<br>' + '&nbsp;&nbsp;&nbsp;A. ' + '正确'
+			+ '<br>' + '&nbsp;&nbsp;&nbsp;B. ' + '错误' + '<br>' + '<br>';
+}
+
+function problemType(val, x, store) {
+	var str = '<br><b>';
+	if (store.data.mustright == '1') {
+		str += '必对题' + '<br>';
+	} else if (store.data.keyproblem == '1') {
+		str += '关键题' + '<br>';
+	} else {
+		str += '普通题' + '<br>';
+	}
+	return str;
+}
+
+function problem_juzhong(val, x, store) {
+	if (curExamPanel == 0 || curExamPanel == 1) {
+		return merge_problem(val, x, store);
+	} else {
+		return panduan_problem(val, x, store);
+	}
+}
+
+var danxuanProblemGrid = new Ext.grid.GridPanel({
+	region : 'center',
+	id : 'danxuanProblemGrid',
+	store : danxuanQuestionStore,
+	loadMask : true,
+	width : 5000,
+	stripeRows : true,
+	autoScroll : true,
+	viewConfig : {
+		sortDescText : '降序',
+		sortAscText : '升序',
+		columnsText : '显示列',
+		forceFit : false
+	},
+	columns : [ new Ext.grid.RowNumberer({
+		width : 28
+	}), {
+		id : 'problemlevel',
+		header : '类型',
+		dataIndex : 'problemlevel',
+		width : 180,
+		sortable : true,
+		hidden : true
+	}, {
+		id : 'question',
+		header : '单 选 题  目',
+		dataIndex : 'question',
+		width : 700,
+		sortable : true,
+		renderer : merge_problem
+	}, {
+		id : 'option1',
+		header : '选  项  1',
+		dataIndex : 'option1',
+		width : 150,
+		sortable : true,
+		hidden : true
+	}, {
+		id : 'option2',
+		header : '选  项  2',
+		dataIndex : 'option2',
+		width : 150,
+		sortable : true,
+		hidden : true
+	}, {
+		id : 'option3',
+		header : '选  项  3',
+		dataIndex : 'option3',
+		width : 150,
+		sortable : true,
+		hidden : true
+	}, {
+		id : 'option4',
+		header : '选  项  4',
+		dataIndex : 'option4',
+		width : 150,
+		sortable : true,
+		hidden : true
+	},{
+		id : 'answer',
+		header : '答  案',
+		dataIndex : 'answer',
+		width : 50,
+		sortable : true
+	}, {
+		id : 'mustright',
+		header : '题目类型',
+		dataIndex : 'mustright',
+		width : 80,
+		sortable : true,
+		renderer : problemType
+	}, {
+		id : 'keyproblem',
+		header : '关 键 题',
+		dataIndex : 'keyproblem',
+		width : 80,
+		sortable : true,
+		hidden : true
+	} ]
+});
+
+var duoxuanProblemGrid = new Ext.grid.GridPanel({
+	region : 'center',
+	id : 'duoxuanProblemGrid',
+	store : duoxuanQuestionStore,
+	loadMask : true,
+	width : 5000,
+	stripeRows : true,
+	autoScroll : true,
+	viewConfig : {
+		sortDescText : '降序',
+		sortAscText : '升序',
+		columnsText : '显示列',
+		forceFit : false
+	},
+	columns : [ new Ext.grid.RowNumberer({
+		width : 28
+	}), {
+		id : 'problemlevel',
+		header : '类型',
+		dataIndex : 'problemlevel',
+		width : 180,
+		sortable : true,
+		hidden : true
+	}, {
+		id : 'question',
+		header : '多 选 题  目',
+		dataIndex : 'question',
+		width : 700,
+		sortable : true,
+		renderer : merge_problem
+	}, {
+		id : 'option1',
+		header : '选  项  1',
+		dataIndex : 'option1',
+		width : 150,
+		sortable : true,
+		hidden : true
+	}, {
+		id : 'option2',
+		header : '选  项  2',
+		dataIndex : 'option2',
+		width : 150,
+		sortable : true,
+		hidden : true
+	}, {
+		id : 'option3',
+		header : '选  项  3',
+		dataIndex : 'option3',
+		width : 150,
+		sortable : true,
+		hidden : true
+	}, {
+		id : 'option4',
+		header : '选  项  4',
+		dataIndex : 'option4',
+		width : 150,
+		sortable : true,
+		hidden : true
+	}, {
+		id : 'answer',
+		header : '答  案',
+		dataIndex : 'answer',
+		width : 50,
+		sortable : true
+	},{
+		id : 'mustright',
+		header : '题目类型',
+		dataIndex : 'mustright',
+		width : 80,
+		sortable : true,
+		renderer : problemType
+	}, {
+		id : 'keyproblem',
+		header : '关 键 题',
+		dataIndex : 'keyproblem',
+		width : 80,
+		sortable : true,
+		hidden : true
+	}, {
+		id : 'subid',
+		header : '题库',
+		dataIndex : 'subid',
+		width : 80,
+		sortable : true,
+		hidden : true
+	} ]
+});
+
+var panduanProblemGrid = new Ext.grid.GridPanel({
+	region : 'center',
+	id : 'panduanProblemGrid',
+	store : panduanQuestionStore,
+	loadMask : true,
+	width : 5000,
+	stripeRows : true,
+	autoScroll : true,
+	viewConfig : {
+		sortDescText : '降序',
+		sortAscText : '升序',
+		columnsText : '显示列',
+		forceFit : false
+	},
+	columns : [ new Ext.grid.RowNumberer({
+		width : 28
+	}), {
+		id : 'problemlevel',
+		header : '类型',
+		dataIndex : 'problemlevel',
+		width : 180,
+		sortable : true,
+		hidden : true
+	}, {
+		id : 'question',
+		header : '判  断  题  目',
+		dataIndex : 'question',
+		sortable : true,
+		width : 700,
+		renderer : panduan_problem
+	}, {
+		id : 'answer',
+		header : '答  案',
+		dataIndex : 'answer',
+		width : 50,
+		sortable : true
+	},{
+		id : 'mustright',
+		header : '题目类型',
+		dataIndex : 'mustright',
+		width : 80,
+		sortable : true,
+		renderer : problemType
+	}, {
+		id : 'keyproblem',
+		header : '关 键 题',
+		dataIndex : 'keyproblem',
+		width : 80,
+		sortable : true,
+		hidden : true
+	}, {
+		id : 'subid',
+		header : '题库',
+		dataIndex : 'subid',
+		width : 80,
+		sortable : true,
+		hidden : true
+	} ]
+});
+
+function addExamPaperProblem(panel) {
+	tabPanel = Ext.getCmp('centerTabPanel');
+	tabPanel.add(panel);
+	tabPanel.doLayout(true, true);
+	tabPanel.show();
+	tabPanel.setActiveTab("danxuan");
+}
+
+// 具体考试考卷panel
+var danxuanPanel = new Ext.Panel({
+	id : "danxuan",
+	title : "单选题",
+	layout : 'column',
+	width : 300,
+	items : [ danxuanProblemGrid ]
+});
+
+var duoxuanPanel = new Ext.Panel({
+	id : "duoxuan",
+	title : "多选题",
+	layout : 'column',
+	height : 5000,
+	width : 300,
+	items : [ duoxuanProblemGrid ]
+});
+
+var panduanPanel = new Ext.Panel({
+	id : "panduan",
+	title : "判断题",
+	layout : 'column',
+	height : 5000,
+	width : 300,
+	items : [ panduanProblemGrid ]
+});
+
+var examPaperPanel = new Ext.TabPanel({
+	id : "centerTabPanel",
+	title : "试卷具体内容",
+	region : 'center', // a center region is ALWAYS required for border layout
+	deferredRender : false,
+	activeTab : 0, // first tab initially active
+	resizeTabs : true,
+	layoutOnTabChange : true,
+	defaults : {
+		autoScroll : true
+	},
+	items : [],
+
+	initEvents : function() {
+		Ext.TabPanel.superclass.initEvents.call(this);
+		this.on('add', this.onAdd, this, {
+			target : this
+		});
+		this.on('remove', this.onRemove, this, {
+			target : this
+		});
+		this.mon(this.strip, 'mousedown', this.onStripMouseDown, this);
+		this.mon(this.strip, 'contextmenu', this.onStripContextMenu, this);
+		if (this.enableTabScroll) {
+			this.mon(this.strip, 'mousewheel', this.onWheel, this);
+		}
+		this.mon(this.strip, 'dblclick', this.onTitleDbClick, this);
+	},
+	onTitleDbClick : function(e, target, o) {
+		var t = this.findTargets(e);
+		if (t.item.fireEvent('beforeclose', t.item) !== false) {
+			t.item.fireEvent('close', t.item);
+			this.remove(t.item);
+		}
+	}
+});
+
+function WindowInit() {
+	TestPaperRecordController.getPaperNumList(function(data) {
+		if (data) {
+			comnoPaperNumStore.loadData(data);
+		}
+	});
+	// 获取涉密人员等级List信息
+	UserController.getUserLevelList(function(data) {
+		if (data) {
+			// 加载数据
+			userlevelStore.loadData(data);
+		}
+	});
+}
+
+// 窗口初始化
+function generateExamPaperInit() {
+	new Ext.Viewport({
+		layout : 'border', // 表格布局
+		id : 'mainpanel',
+		bodyPadding : 5,
+		hideMode : Ext.isIE ? 'offsets' : 'display',
+		items : [ paperGenerateInfoForm, examPaperPanel ],
+		renderTo : Ext.getBody()
+	});
+	WindowInit();
+
+	addExamPaperProblem(danxuanPanel);
+	addExamPaperProblem(duoxuanPanel);
+	addExamPaperProblem(panduanPanel);
+}

@@ -1,0 +1,80 @@
+package com.egov.secrecysystem.controller;
+
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.egov.secrecysystem.service.NewsService;
+import com.egov.secrecysystem.service.TitleService;
+
+@Controller
+public class TitleController {
+	@Autowired
+	private TitleService titleService;
+	@Autowired
+	private NewsService newsService;
+	
+	/**
+	 * @author LiangGe
+	 * @param request
+	 * @param response
+	 * @return
+	 * @throws Exception
+	 */
+	// 获取新闻标题List
+	@RequestMapping(value = "RegulationInfomanage", method = RequestMethod.GET)
+	public ModelAndView getNewsInfoPage(HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		
+		HttpSession curSession = request.getSession();
+		List<Map> titleList = titleService.getNewsInfoPage();
+		curSession.setAttribute("title", titleList);
+		List<Map> list = (List<Map>)curSession.getAttribute("title");
+		for (Map map : list) {
+			System.out.println(map.toString());
+		}
+		String titleId = request.getParameter("id");
+		System.out.println("id = " + titleId);
+		if(titleId == null) {
+			curSession.setAttribute("news", newsService.getNewsTitle(titleList.get(0).get("id").toString()));
+		} else {
+			curSession.setAttribute("news", newsService.getNewsTitle(titleId));
+		}
+		return new ModelAndView("RegulationInfomanage");
+	}
+	
+	/**
+	 * @author LiangGe
+	 * @param request
+	 * @param response
+	 * @return
+	 * @throws Exception
+	 */
+	// 获取新闻详细信息
+	@RequestMapping(value = "NewsInfoDetail", method = RequestMethod.GET)
+	public ModelAndView getNewsInfoDetail(HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		
+		HttpSession curSession = request.getSession();
+		List<Map> list = (List<Map>)curSession.getAttribute("title");
+		for (Map map : list) {
+			System.out.println("测试之前的List是否还在 = " + map.toString());
+		}
+		String id = request.getParameter("id");
+		Map map = newsService.getNewsInfoDetail(id);
+		curSession.setAttribute("news", map);
+		List<Map> titleList = titleService.getNewsInfoPage();
+		curSession.setAttribute("title", titleList);
+		return new ModelAndView("NewsInfoDetail");
+	}
+
+}

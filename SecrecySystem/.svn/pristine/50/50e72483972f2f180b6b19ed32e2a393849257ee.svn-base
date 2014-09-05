@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2012-3-26 19:37:28 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="com.egov.secrecysystem.model.SeTitle" table="se_title" catalog="secrecysystem">
+        <id name="id" type="string">
+            <column name="ID" length="36" />
+            <generator class="uuid.hex" />
+        </id>
+        <property name="titlename" type="string">
+            <column name="TITLENAME">
+                <comment>&#189;&#199;&#201;&#171;&#195;&#251;&#179;&#198;</comment>
+            </column>
+        </property>
+        <property name="remark" type="string">
+            <column name="REMARK" length="65535">
+                <comment>&#177;&#184;&#215;&#162;</comment>
+            </column>
+        </property>
+       
+        <set name="seNews" table="se_news" inverse="true" lazy="true" fetch="select">
+            <key>
+                <column name="TITLEID" length="36">
+                    <comment>&#189;&#199;&#201;&#171;ID</comment>
+                </column>
+            </key>
+            <one-to-many class="com.egov.secrecysystem.model.SeNews" />
+        </set>
+    </class>
+</hibernate-mapping>

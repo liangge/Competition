@@ -1,0 +1,9 @@
+package com.egov.secrecysystem.dao;
+
+import com.egov.secrecysystem.model.CpQuestion;
+
+public class CpQuestionDao extends AbstractHibernateDao<CpQuestion> {
+	CpQuestionDao() {
+		super(CpQuestion.class);
+	}
+}

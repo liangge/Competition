@@ -1,0 +1,79 @@
+package com.egov.secrecysystem.controller;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.directwebremoting.WebContextFactory;
+import org.directwebremoting.annotations.RemoteMethod;
+import org.directwebremoting.annotations.RemoteProxy;
+import org.directwebremoting.spring.SpringCreator;
+import org.json.simple.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.egov.secrecysystem.model.Function;
+import com.egov.secrecysystem.service.ScoreRecordService;
+
+@RemoteProxy(creator = SpringCreator.class)
+public class ScoreRecordController {
+	@Autowired
+	private ScoreRecordService scoreRecordService;
+
+	@RemoteMethod
+	public List<Map> summaryScoreByDepart(JSONObject summaryCondition) {
+		return scoreRecordService.summaryScoreByDepart(summaryCondition);
+	}
+
+	@RemoteMethod
+	public List<Map> summaryScoreByYear(JSONObject summaryCondition) {
+		return scoreRecordService.summaryScoreByYear(summaryCondition);
+	}
+	// 显示分数处理
+	@RemoteMethod
+	public Map paginationShow(String filterString, String pageNum,
+			String pageSize, String papernum) {
+		Map map = new HashMap();
+		String whereString = Function.initSearchHql_whereString_(filterString);
+		Map<String, Object> paramsMap = Function.initSearchValues(filterString);
+		List<Map> result = scoreRecordService.getPageScoreRecord(whereString,
+				paramsMap, pageNum, pageSize, papernum);
+		map.put("totalProperty", scoreRecordService.getScoreRecordTotalCount(
+				whereString, paramsMap));
+		map.put("root", result);
+		return map;
+	}
+
+	// 更新分数信息
+	@RemoteMethod
+	public boolean updateScoreRecord(JSONObject instructor) {
+		return scoreRecordService.updateScoreRecord(instructor);
+	}
+
+	// 刪除分数信息
+	@RemoteMethod
+	public boolean deleteScoreRecord(List<String> ids) {
+		return scoreRecordService.deleteScoreRecord(ids);
+	}
+	
+	@RemoteMethod
+	/**
+	 * 
+	 * @param loginName
+	 * @param paperNum
+	 * @param remark
+	 * @param testPaperRecordId
+	 * @return
+	 */
+	public JSONObject caculateScoreByPerson(String loginName, String paperNum,String remark
+			,String testPaperRecordId) {
+		return scoreRecordService.caculateScoreByPerson(loginName,paperNum,remark,testPaperRecordId);
+		
+	}
+	//查询成绩
+	@RemoteMethod
+	public List<Map> selectScoreByLoginName() {
+		String loginName = (String) WebContextFactory.get().getSession()
+				.getAttribute("name");
+		return scoreRecordService.selectScoreByLoginName(loginName);
+	}
+}

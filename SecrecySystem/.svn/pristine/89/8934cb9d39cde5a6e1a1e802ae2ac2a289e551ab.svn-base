@@ -1,0 +1,76 @@
+package com.egov.secrecysystem.controller;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.directwebremoting.WebContextFactory;
+import org.directwebremoting.annotations.RemoteMethod;
+import org.directwebremoting.annotations.RemoteProxy;
+import org.directwebremoting.spring.SpringCreator;
+import org.json.simple.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.egov.secrecysystem.model.Function;
+import com.egov.secrecysystem.service.NewsService;
+import com.egov.secrecysystem.service.TitleService;
+import com.egov.secrecysystem.service.UserService;
+
+@RemoteProxy(creator = SpringCreator.class)
+public class NewsController {
+	@Autowired
+	private NewsService newsService;
+	@Autowired
+	private TitleService titleService;
+	
+	/**
+	 * @author LiangGe
+	 * @param filterString
+	 * @param pageNum
+	 * @param pageSize
+	 * @return
+	 */
+	// 获取所有新闻信息
+	@RemoteMethod
+	public Map pageInit(String filterString, String pageNum,String pageSize) {
+		Map map = new HashMap();
+		String whereString = Function.initSearchHql_whereString_(filterString);
+		Map<String, Object> paramsMap = Function.initSearchValues(filterString);
+		List<Map> result = newsService.pageInit(whereString, paramsMap, pageNum, pageSize);
+		map.put("totalProperty", newsService.getNewsCount(whereString, paramsMap));
+		map.put("root", result);
+		return map;
+	}
+	
+	/**
+	 * @author LiangGe
+	 * @return
+	 */
+	// 获取新闻总标题List
+	@RemoteMethod
+	public List<Map> getTitleNameList() {
+		return titleService.getNewsInfoPage();
+	}
+	
+	/**
+	 * @author LiangGe
+	 * @param news
+	 * @return
+	 */
+	@RemoteMethod
+	public String updateNewsInfo(JSONObject news) {
+		return newsService.updateNewsInfo(news);
+	}
+	
+	
+	/**
+	 * @author LiangGe
+	 * @param ids
+	 * @return
+	 */
+	//刪除新闻信息
+	@RemoteMethod
+	public String deleteNewss(List<String> ids){
+		return newsService.deleteNewss(ids);
+	}
+}

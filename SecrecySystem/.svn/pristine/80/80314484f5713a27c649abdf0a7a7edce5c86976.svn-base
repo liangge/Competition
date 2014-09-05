@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2012-3-26 19:37:28 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="com.egov.secrecysystem.model.SeQuestionBank" table="se_question_bank" >
+        <id name="id" type="string">
+            <column name="ID" length="36" />
+            <generator class="uuid.hex" />
+        </id>
+       
+        <property name="problemlevel" type="java.lang.Integer">
+            <column name="PROBLEMLEVEL" />             
+        </property> 
+        <property name="subname" type="string">
+            <column name="SUBNAME" />
+        </property>
+         <set name="seProblemDanXuans" table="se_problem_danxuan" inverse="true" lazy="true" fetch="select">
+            <key>
+                <column name="SUBID" length="36" />
+            </key>
+            <one-to-many class="com.egov.secrecysystem.model.SeProblemDanXuan" />
+        </set>
+        <set name="seProblemDuoXuans" table="se_problem_duoxuan" inverse="true" lazy="true" fetch="select">
+            <key>
+                <column name="SUBID" length="36" />
+            </key>
+            <one-to-many class="com.egov.secrecysystem.model.SeProblemDuoXuan" />
+        </set>
+        <set name="seProblemPanDuans" table="se_problem_panduan" inverse="true" lazy="true" fetch="select">
+            <key>
+                <column name="SUBID" length="36" />
+            </key>
+            <one-to-many class="com.egov.secrecysystem.model.SeProblemPanDuan" />
+        </set>
+       
+    </class>
+</hibernate-mapping>

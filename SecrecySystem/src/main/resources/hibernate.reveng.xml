@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-reverse-engineering PUBLIC "-//Hibernate/Hibernate Reverse Engineering DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-reverse-engineering-3.0.dtd" >
+
+<hibernate-reverse-engineering>
+  <table-filter match-catalog="secrecysystem" match-name="se_score_record"/>
+  <table-filter match-catalog="secrecysystem" match-name="se_answer_record_danxuan"/>
+  <table-filter match-catalog="secrecysystem" match-name="se_answer_record_duoxuan"/>
+  <table-filter match-catalog="secrecysystem" match-name="se_answer_record_panduan"/>
+  <table-filter match-catalog="secrecysystem" match-name="se_mainmenu"/>
+  <table-filter match-catalog="secrecysystem" match-name="se_paper_danxuan"/>
+  <table-filter match-catalog="secrecysystem" match-name="se_paper_duoxuan"/>
+  <table-filter match-catalog="secrecysystem" match-name="se_paper_panduan"/>
+  <table-filter match-catalog="secrecysystem" match-name="se_problem_danxuan"/>
+  <table-filter match-catalog="secrecysystem" match-name="se_problem_duoxuan"/>
+  <table-filter match-catalog="secrecysystem" match-name="se_problem_panduan"/>
+  <table-filter match-catalog="secrecysystem" match-name="se_role"/>
+  <table-filter match-catalog="secrecysystem" match-name="se_testpaper_record"/>
+  <table-filter match-catalog="secrecysystem" match-name="se_user"/>
+   <table-filter match-catalog="secrecysystem" match-name="se_question_bank"/>
+</hibernate-reverse-engineering>

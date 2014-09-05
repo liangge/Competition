@@ -1,0 +1,34 @@
+package com.egov.secrecysystem.controller;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.directwebremoting.annotations.RemoteMethod;
+import org.directwebremoting.annotations.RemoteProxy;
+import org.directwebremoting.spring.SpringCreator;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.egov.secrecysystem.model.Function;
+import com.egov.secrecysystem.service.CpQuestionService;
+
+@RemoteProxy(creator = SpringCreator.class)
+public class CpQuestionController {
+	@Autowired
+	private CpQuestionService cpQuestionService;
+	//显示单选题处理
+	@RemoteMethod
+	public Map paginationShow(String filterString, String pageNum,
+			String pageSize,String paperNum,String userLevel) {
+		
+		Map map = new HashMap();
+		String whereString = Function.initSearchHql_whereString_(filterString);
+		Map<String, Object> paramsMap = Function.initSearchValues(filterString);
+		List<Map> result = cpQuestionService.getPageInstructors(
+				whereString, paramsMap, pageNum, pageSize);
+		map.put("totalProperty", cpQuestionService
+				.getInstructorsTotalCount(whereString, paramsMap));
+		map.put("root", result);
+		return map;
+	}
+}

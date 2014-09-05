@@ -1,0 +1,34 @@
+package com.egov.secrecysystem.service;
+
+import java.util.List;
+import java.util.Map;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.egov.secrecysystem.dao.TitleDao;
+import com.egov.secrecysystem.model.SeMainmenu;
+import com.egov.secrecysystem.model.SeTitle;
+
+@Service
+@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+public class TitleService {
+	@Autowired
+	private TitleDao titleDao;
+	
+	/**
+	 * @author LiangGe
+	 * @return
+	 */
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public List<Map> getNewsInfoPage() {
+		List<Map> newsTitle = titleDao.getNewsInfoPage();
+		return newsTitle;
+	}
+	
+	
+}

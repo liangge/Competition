@@ -1,0 +1,73 @@
+package com.egov.secrecysystem.dao;
+
+import java.util.List;
+import java.util.Map;
+
+import org.hibernate.Query;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.egov.secrecysystem.model.CpQuestion;
+import com.egov.secrecysystem.model.CpUser;
+
+public class CpQuestionDao extends AbstractHibernateDao<CpQuestion> {
+	CpQuestionDao() {
+		super(CpQuestion.class);
+	}
+	public List<Map> getPageInstructors(String whereString,
+			Map<String, Object> valuesMap, int pageNum, int pageSize) {
+//		String hql = "select new map(t.id as id, t.problemlevel as problemlevel, t.mustright as mustright, t.keyproblem as keyproblem,"
+//				+ "t.question as question, t.option1 as option1, t.option2 as option2, t.option3 as option3, t.option4 as option4,"
+//				+ "t.answer as answer,t.problemnum as problemnum) from com.egov.secrecysystem.model.SeProblemDanXuan t";
+		String hql = "select new map(t.id as id,t.number as number,t.question as question) "
+				+ "from com.egov.secrecysystem.model.CpQuestion t";
+
+		hql += whereString;
+		hql += " order by t.number ";
+		Query query = this.getCurrentSession().createQuery(hql)
+				.setFirstResult(pageNum).setMaxResults(pageSize);
+		String[] perchs = valuesMap.keySet().toArray(new String[0]);
+		for (int i = 0; i < perchs.length; i++) {
+					
+			query.setParameter(perchs[i], valuesMap.get(perchs[i]));
+		}
+		return query.list();
+	}
+	
+	public long getInstructorsTotalCount(String whereString,
+			Map<String, Object> valuesMap) {
+		String hql = "select t from com.egov.secrecysystem.model.CpQuestion t ";
+		hql += whereString;
+		hql += " and t is not null";
+		Query query = this.getCurrentSession().createQuery(hql);
+		String[] perchs = valuesMap.keySet().toArray(new String[0]);
+		for (int i = 0; i < perchs.length; i++) {
+			query.setParameter(perchs[i], valuesMap.get(perchs[i]));
+		}
+		return query.list().size();
+	}
+	/**
+	 * 根据id取出CpQuestion
+	 * @param id
+	 * @return
+	 */
+	public CpQuestion findCpQuestionById(String id) {
+		String hql = "select e from com.egov.secrecysystem.model.CpQuestion e where e.id=:id";
+		Query query = this.getCurrentSession().createQuery(hql);
+		query.setParameter("id", id);
+		List<CpQuestion> result = query.list();
+		if (result.size() == 1)
+			return result.get(0);
+		return null;
+	}
+	
+	/**
+	 * @author LiangGe
+	 * @return
+	 * 获取题目数量
+	 */
+	public int getQuestionCount(){
+		String hql = "select t from com.egov.secrecysystem.model.CpQuestion t ";
+		return this.getCurrentSession().createQuery(hql).list().size();
+	}
+}

@@ -1,0 +1,702 @@
+*{
+	margin:0;
+	padding:0;
+	list-style:none;
+}
+a{
+	color:black;
+	text-decoration:none;
+}
+a:hover{
+	color:red;
+	text-decoration:underline;
+}
+img{
+	border:none;
+}
+body{
+	font-size:12px;
+	font-family:宋体，Arial，Helvetica，sans-serif;
+	line-height:180%;
+	/* background-image:url('/SecrecySystem/resources/images/regulation/pagebg.jpg'); */
+	background-repeat:repeat-x;
+	/* background-color: #C7E3EF;	 */
+	background-color: #e7e7e7;
+}
+#wrap{
+	width:960px;
+/* 	height:1000px;  */
+	margin:0 auto;
+	overflow:hidden;
+	background-color:#fff;
+}
+#wrapn{
+	width:950px;
+	margin:0 auto;
+	overflow:hidden;
+}
+
+.clear{
+	clear:both;
+}
+.hnav{
+	width:948px;
+	background-image: url('/SecrecySystem/tp1/standardl2nav_bg.gif');
+	height:31px;
+	border:1px #E3E3E3 solid;
+	margin-top:5px;
+	line-height:31px;
+}
+.hnav span{
+    float:right;
+    padding-right:10px;
+}
+.znav{
+	width:950px;
+	background-image:url('/SecrecySystem/resources/images/regulation/bg_x.png');
+	height:95px;
+	margin-top:10px;
+	background-position:left -95px;
+}
+.nleft{
+	display:block;
+	width:11px;
+	float:left;
+	background-image:url('/SecrecySystem/resources/images/regulation/bg1.png');
+	background-position:left top;
+	height:90px;
+}
+.nright{
+	display:block;
+	width:11px;
+	float:right;
+	background-image:url('/SecrecySystem/resources/images/regulation/bg1.png');
+	background-position:171px top;
+	height:90px;
+}
+.zdhbt{
+	height:50px;
+	margin-left:10px;
+}
+.zdhbt li{
+	float:left;
+	margin-top:22px;
+}
+.zdhbt li a{
+	color: white;
+	text-decoration:none;
+	padding:2px 17px 0 17px;
+	display: inline-block;
+}
+.zdhbt li a:hover{
+	color:yellow;
+	text-decoration:none;
+	background: #003366;
+}
+.snav{
+	height:20px;
+	line-height:20px;
+	margin-top:10px;
+	overflow:hidden;
+	color: #003366;
+}
+#bjsj{
+	float:right;
+}
+.snav ul li{
+	float:left;
+	
+}
+.snav ul li a{
+    color: #003366;
+    text-decoration:none;
+    padding-left:15px;
+}
+.snav ul li a:hover{
+	color:red;
+}
+#wzgg{
+	height:30px;
+	line-height:30px;
+	color:gray;
+	background-image:url('../tp1/gg.gif');
+	background-repeat:no-repeat;
+	background-position:5px 6px;
+	padding-left:23px;
+}
+#hd{
+	width:352px;
+	height:302px;
+	float:left;
+	border:5px solid #005DBA;
+}
+.exmp{width:350px; height:300px;border:1px solid white }
+.mainnews{
+	float:left;
+	margin-left:10px;
+	width:360px;
+	overflow:hidden;
+	height:312px;
+}
+.mainnews ul li{
+
+	color:gray;
+	height:24px;
+	line-height:24px;
+}
+.mainnews ul li span{
+    white-space:pre;	
+}
+h1.syjdbt{
+	font-size:16px;
+	color: #CC0000;
+   font-family:"microsoft yahei","微软雅黑","黑体","simsun","宋体";
+	font-weight:normal;
+	text-align:center;
+	height:25px;
+}
+h1.syjdbt a{
+	color: #990000;
+}
+.newsr{
+	float:left;
+	width:211px;
+	background:#E2ECFC;
+}
+
+.newsr1{
+	width:211px;
+	background:#E2ECFC;
+}
+.newsrbt{
+	height:35px;
+	background-image:url('/SecrecySystem/resources/images/regulation/bg1.png');
+	background-position:left 446px;
+	line-height:35px;
+	cursor:pointer;
+}
+.newsrbt a.current{
+	background-image:url('/SecrecySystem/resources/images/regulation/bg1.png');
+	background-position:155px 446px;	
+}
+.newsrbt a{
+	width:105px;
+	height:35px;
+	display:block;
+	float:left;
+	text-align:center;
+	margin-top:1px;
+	color:#003366;
+	text-decoration:none;
+}
+.newsrnr{
+	width:209px;
+	border:1px #ACCAF8 solid;
+	height:272px;
+	border-top:none;
+}
+.newsrnr1{
+	width:209px;
+	border:1px #ACCAF8 solid;
+	border-top:none;
+	line-height:150%;
+	color:#003366;
+	
+}
+.newsrnr1 a{
+	color:#003366
+}
+.newsrnr ul li{
+   background-position:5px 7px;
+   background-repeat:no-repeat;
+   padding-left:22px;
+   line-height:27px;
+   height:27px;
+}
+.newsrnr ul li a{
+	color:#003366;
+}
+.newsrnr ul li a:hover{
+	color:red;
+}
+.syfl{
+	width:312px;
+	float:left;
+	margin-top:5px;
+	background-image:url('../tp1/bg3.gif');
+	background-repeat:no-repeat;
+}
+.bc{
+	margin-left:7px;
+}
+.syflnr{
+	width:308px;
+	height:262px;
+	margin-top:1px;
+	border:1px #ACCAF8 solid;
+	border-top:none;
+	padding:1px 1px;
+}
+.syfl ul li span{
+	float:right;
+	color:gray;
+}
+.syfl ul li{
+	line-height:24px;
+	height:24px;
+	background-image:url('/SecrecySystem/resources/images/regulation/dian.gif');
+	background-position:5px center;
+	background-repeat:no-repeat;
+	padding-left:13px;
+	padding-right: 5px;
+	padding-top: 0;
+	padding-bottom: 0;
+}
+.news_syflnr{
+	width:308px;
+	height:262px;
+	margin-top:10px;
+	border:1px #ACCAF8 solid;
+	border-top:none;
+	padding:1px 1px;
+}
+
+.syflbt{
+	background-image:url('/SecrecySystem/resources/images/regulation/bg_x.png');
+	background-position:left bottom;
+	height:25px;
+}
+.syflbt strong{
+	background-image:url('/SecrecySystem/resources/images/regulation/bg1.png');
+	background-position:right 57px;
+	margin-left:10px;
+	width:80px;
+	height:21px;
+	display:inline-block;
+	margin-top:4px;
+	text-align:center;
+	color: #003366;
+	font-weight:normal;
+}
+.syflbt span{
+	float:right;
+	color:white;
+	padding-right:8px;
+	display:inline-block;
+	padding-top:2px;	
+}
+.syflbt a{
+	color:white;
+}
+
+.syfl2{
+	width:731px;
+	float:left;
+	margin-top:5px;
+	background-image:url('/SecrecySystem/resources/images/regulation/lctop.gif');
+	background-repeat:no-repeat;
+}
+.syfl2 ul li{
+	float:left;
+	width:181px;
+	text-align:center;
+	margin-top:3px;
+	line-height:100%;
+}
+.syfl2 ul li img{
+	width:175px;
+	height:116px;
+}
+#link{
+	width:950px;
+	margin-top:5px;
+	background-image:url('../tp1/link.gif');
+	background-repeat:no-repeat;
+}
+.tplj{
+	margin-top:5px;
+	margin-left:3px;
+}
+.wzlj{
+	margin-left:3px;
+}
+#link .tplj li{
+	float:left;
+	width:94px;
+	text-align:center;
+	height:36px;
+}
+.tplj li img{
+	width:88px;
+	height:31px;
+}
+#link .wzlj li{
+	float:left;
+	width:94px;
+	text-align:center;
+	height:20px;
+	line-height:20px;
+	overflow: hidden;
+}
+#bottom{
+	 text-align:center;
+	 margin-top:5px;
+	 border-top:5px solid #0066CC;
+	 padding-top:5px;
+}
+
+        #scrollDiv
+        {
+            width: 500px;
+            height: 30px;
+            line-height: 30px;
+            overflow: hidden;
+            float:left;
+        }
+        #scrollDiv li span
+        {
+        padding-right:5px;
+        }
+        #scrollDiv li
+        {
+            height: 30px;
+            padding-left:1px;
+        }
+        #scrollDiv li a{
+	color: gray;
+}
+
+.notice{
+	float:left;
+}
+.wzps{
+	float:right;
+	width:128px;
+
+}
+.wzps span{
+	float:left;
+}
+.wzps ul li{
+	float:left;
+	margin-left:5px;
+	text-indent: -50px;
+	overflow:hidden;
+	cursor:pointer;
+}
+#skin_0{
+	width:11px;
+	height:11px;
+	margin-top:7px;
+	background:#0066FF;
+}
+#skin_1{
+	width:13px;
+	height:13px;
+	margin-top:7px;
+	background: green;
+	border:1px solid #003300;
+}
+#skin_2{
+	width:13px;
+	height:13px;
+	margin-top:7px;
+	background:#CC0000;
+	border:1px solid maroon;
+}
+#skin_3{
+	width:13px;
+	height:13px;
+	margin-top:7px;
+	background: #525252;
+	border:1px #333333 solid;
+}
+
+
+.wzps ul li.selected{
+    border: 2px solid blue;
+}
+
+
+/*次页样式表*/
+.cyleft{
+	width:731px;
+	float:left;
+}
+.location{
+	width:707px;
+	height:30px;
+	background-image:url('/SecrecySystem/resources/images/regulation/home.gif');
+	background-repeat:no-repeat;
+	background-position:5px 7px;
+	padding-left:22px;
+	line-height:30px;
+	border:1px #ACCAF8 solid;
+	color:#003366;
+}
+.location a{
+	color:#003366;
+}
+.search{
+	width:629px;
+	height:40px;
+/* 	border:1px #ACCAF8 solid;
+	background: #E2ECFC url('../tp1/search.gif') no-repeat 30px center; */
+	margin-top:5px;  
+	padding:20px 0 0 100px;
+	}
+.search input,.search select{
+	padding:none;
+	margin:none;
+	vertical-align:middle;
+}
+.key{
+	width:395px;
+	margin-left:5px;
+	border:1px #ACCAF8 solid;
+	height:20px;
+	color: #003366;
+}
+.tj{
+	width:80px;
+	background: #E2ECFC;
+	border:1px #ACCAF8 solid;
+	border-left:none;
+	height:22px;
+	color: #003366;
+}
+
+select{
+	border:1px #ACCAF8 solid;
+	height:22px;
+	color: #003366;
+}
+.cyfl{
+	width:731px;
+	float:left;
+	margin-top:5px;
+	background-image:url('/SecrecySystem/resources/images/regulation/lctop.gif');
+	background-repeat:no-repeat;
+}
+.cyfl ul.newslb  li{
+	background-image:url('/SecrecySystem/resources/images/regulation/dian.gif');
+	background-repeat:no-repeat;
+	background-position:left 9px;
+	height:25px;
+	line-height:25px;
+	padding-left:10px;
+	color:gray;
+}
+.xtfy{
+	text-align:center;
+	padding-bottom:5px;
+}
+.cyfl ul{
+	width:716px;
+	margin:0 auto;
+	padding-top:5px;
+}
+.cyfl ul.newslb li span{
+	float:right;
+}
+.cyright{
+	float:right;
+	width:211px;
+}
+.cyleft{
+	float:left;
+	width:211px;
+}
+h1.cywzbt{
+/* 	font-size:16px;
+    font-family:"microsoft yahei","微软雅黑","黑体","simsun","宋体";
+	font-weight:normal;
+	text-align:center;
+	height:30px;
+	line-height:30px;
+	border-bottom:1px dashed #CCCCCC;
+	width:710px;
+	margin:0 auto;
+	padding-top:10px; */
+	
+	text-align:center;
+	font-weight:normal;
+	color:#0069FF;
+	margin:30px 10px;
+	border-bottom:1px dashed #CCCCCC;
+	font-size:25px;
+	font-weight:bold;
+	line-height:30px;
+}
+
+.wzzw{
+	width:710px;
+	margin:0 auto;
+}
+h2.zwbc{
+   text-align:center;
+   font-weight:normal;
+   font-size:12px;
+   color:gray;
+   height:30px;
+}
+h3.nextwz{
+	text-align:center;
+	font-weight:normal;
+   font-size:12px;
+   height:30px;
+   border-top:1px dashed #CCCCCC;
+   width:710px;
+   margin:0 auto;
+   padding-top:5px;
+   margin-top:5px;	
+}
+h3.nextwz a{
+   color: #003366;
+}
+ul.tjnews li,ul.tjtw li{
+ background-image:url('../tp1/11.gif');
+}
+
+ul.rmnews li.top1{
+ background-image:url('../tp1/n1.gif');
+}
+ul.rmnews li.top2{
+ background-image:url('../tp1/n2.gif');
+}
+
+ul.rmnews li.top3{
+ background-image:url('../tp1/n3.gif');
+}
+ul.rmnews li.top4{
+ background-image:url('../tp1/n4.gif');
+}
+ul.rmnews li.top5{
+ background-image:url('../tp1/n5.gif');
+}
+ul.rmnews li.top6{
+ background-image:url('../tp1/n6.gif');
+}
+ul.rmnews li.top7{
+ background-image:url('../tp1/n7.gif');
+}
+ul.rmnews li.top8{
+ background-image:url('../tp1/n8.gif');
+}
+ul.rmnews li.top9{
+ background-image:url('../tp1/n9.gif');
+}
+ul.rmnews li.top10{
+ background-image:url('../tp1/n10.gif');
+}
+
+.newstw li{
+	float:left;
+	width:179px;
+	text-align:center;
+	margin-top:3px;
+	line-height:100%;
+}
+.newstw li span{
+	display:block;
+	height:21px;
+	padding-top:5px;
+}
+.newstw li img{
+	width:175px;
+	height:116px;
+}
+#zwnrfy{
+	text-align:center;
+	font-size:14px;
+	font-weight:bold;
+	color:gray;
+}
+#zwnrfy a{
+	font-size:14px;
+	color:gray;
+}
+
+
+.news_list{
+	padding:5px 10px;
+}
+.news_list li{
+	border-bottom:1px dotted #ccc;
+	padding:3px 5px 3px 5px;
+	font-size:13px;
+}
+.news_list li a{
+	display:block;
+	float:left;
+	overflow:hidden;
+	width:590px;
+	color:#0e5383;
+}
+
+.sub_right{
+	width:756px;
+	float:left;
+	background:#fff;
+}
+.sub_right h3{
+	text-align:center;
+	font-weight:normal;
+	color:#0069FF;
+	margin:30px 10px;
+	/* border-bottom:1px solid #ccc; */
+	font-size:25px;
+	font-weight:bold;
+}
+
+.news_sub_right{
+	width:756px;
+	float:left;
+	background:#fff;
+}
+.news_sub_right h3{
+	text-align:center;
+	font-weight:normal;
+	color:#0069FF;
+ 	margin:30px 10px 5px 10px; 
+	border-bottom:1px dashed #CCCCCC;
+	font-size:25px;
+ 	font-weight:bold;
+	line-height:30px; 
+}
+
+.sub_left{
+	background:url(/SecrecySystem/resources/images/regulation/left_bg.jpg) #dedede repeat-x;
+	width:219px;
+	float:right;
+	padding:50px 0 0 0;
+	min-height:500px;
+	_height:500px;
+}
+.sub_left h2{
+	background:url(/SecrecySystem/resources/images/regulation/line.jpg) no-repeat bottom center;
+	color:#0069ff;
+	text-align:center;
+	line-height:50px;
+}
+.sub_left li{
+	display:inline;
+}
+.sub_left li a{
+	display:block;
+	height:42px;
+	line-height:42px;
+	width:234px;
+	text-align:center;
+	background:url(/SecrecySystem/resources/images/regulation/link.jpg) no-repeat;
+	font-size:14px;
+}
+.sub_left li a:hover{
+	display:block;
+	height:42px;
+	line-height:42px;
+	width:234px;
+	text-align:center;
+	background:url(/SecrecySystem/resources/images/regulation/link_hover.jpg) no-repeat;
+	text-decoration:none;
+	font-size:14px;

@@ -1,0 +1,127 @@
+package com.egov.secrecysystem.controller;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.directwebremoting.annotations.RemoteMethod;
+import org.directwebremoting.annotations.RemoteProxy;
+import org.directwebremoting.spring.SpringCreator;
+import org.json.simple.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.egov.secrecysystem.dao.PaperPanDuanDao;
+import com.egov.secrecysystem.model.Function;
+import com.egov.secrecysystem.service.PaperPanDuanService;
+import com.egov.secrecysystem.service.ProblemPanDuanService;
+
+
+@RemoteProxy(creator = SpringCreator.class)
+public class ProblemPanDuanController {
+	@Autowired
+	private ProblemPanDuanService problemPanDuanService;
+	@Autowired
+	private PaperPanDuanService paperPanDuanService;
+	
+	
+	//显示判断题处理
+	@RemoteMethod
+	public Map paginationShow(String filterString, String pageNum,
+			String pageSize,String paperNum,String userLevel) {
+		
+		Map map = new HashMap();
+		String whereString = Function.initSearchHql_whereString_(filterString);
+		Map<String, Object> paramsMap = Function.initSearchValues(filterString);
+		List<Map> result = problemPanDuanService.getPageInstructors(
+				whereString, paramsMap, pageNum, pageSize,paperNum,userLevel);
+		map.put("totalProperty", problemPanDuanService
+				.getInstructorsTotalCount(whereString, paramsMap));
+		map.put("root", result);
+		return map;
+	}
+	//初始化判断题页面
+	@RemoteMethod
+	public Map pageInit(String filterString, String pageNum,
+			String pageSize) {
+		
+		Map map = new HashMap();
+		String whereString = Function.initSearchHql_whereString_(filterString);
+		Map<String, Object> paramsMap = Function.initSearchValues(filterString);
+		List<Map> result = problemPanDuanService.pageInit(
+				whereString, paramsMap, pageNum, pageSize);
+		map.put("totalProperty", problemPanDuanService
+				.getInstructorsTotalCount(whereString, paramsMap));
+		map.put("root", result);
+		return map;
+	}
+	//更新判断题信息
+	@RemoteMethod
+	public String updateInstructorAllInfo(JSONObject instructor) {
+		return problemPanDuanService.updateInstructorAllInfo(instructor);
+	}
+	//删除判断题信息
+	@RemoteMethod
+	public String deleteInstructors(List<String> ids){
+		return problemPanDuanService.deleteInstructors(ids);
+	}
+	@RemoteMethod
+	//插入判断题答案
+	public boolean insertPanDuanAnswerRecord(List<JSONObject> panduanAnswers) {
+		
+		return problemPanDuanService.insertPanDuanAnswerRecord(panduanAnswers);
+	}
+	//获取题目等级类型List
+		@RemoteMethod
+		public List<Map> getProblemLevelList() {
+			return problemPanDuanService.getProblemLevelList();
+		}
+		
+	/**
+	 * @author LiangGe
+	 * @return
+	 */
+	@RemoteMethod
+	public Map generateExamPaper(String isGeneratePaper, String problemlevel, String subid, String panduanKeyNum, String papernum) {
+		Map map = new HashMap();
+		List<Map> result = null;
+		System.out.println("进去！！" + "problemlevel = " + problemlevel);
+		System.out.println("参数：isGeneratePaper=" + isGeneratePaper + "problemlevel=" + problemlevel + "subid = " + subid);
+		System.out.println("参数：panduanKeyNum=" + panduanKeyNum + "papernum=" + papernum);
+		if("0".equals(isGeneratePaper)) { 
+			System.out.println("判断生成试卷！");
+			result = problemPanDuanService.generateExamPaper(problemlevel, subid, panduanKeyNum, Integer.parseInt(papernum));
+		} else {
+			System.out.println("判断获取试卷！");
+			result = paperPanDuanService.getExamPaper(subid, problemlevel,Integer.parseInt(papernum));
+		}
+		
+		map.put("totalProperty", result.size());
+		map.put("root", result);
+		System.out.println("获取信息返回：" + map.toString());
+		return map;
+	}	
+	/**
+	 * @author LiangGe
+	 * @param id
+	 * @param problemlevel
+	 * @param subid
+	 * @param mustright
+	 * @param keyproblem
+	 * @param papernum
+	 * @param problemids
+	 * @return
+	 */
+	@RemoteMethod
+	public JSONObject changeProblem(String id, String problemlevel, String subid, String mustright, String keyproblem, String papernum, List<String> problemids) {
+
+		List<Map> result = problemPanDuanService.changeProblem(id,problemlevel,subid,mustright,keyproblem,Integer.parseInt(papernum),problemids);
+		if(result.size() < 1) {
+			return null;
+		}
+		Map map = result.get(0);
+		JSONObject jsonObject = new JSONObject();
+		jsonObject.put("id", map.get("id"));
+		jsonObject.put("question", map.get("question"));
+		return jsonObject;
+	}
+}

@@ -1,0 +1,23 @@
+package com.egov.secrecysystem.dao;
+
+import java.util.List;
+
+import com.egov.secrecysystem.model.CpUser;
+import com.egov.secrecysystem.model.SeUser;
+
+public class CpUserDao extends AbstractHibernateDao<CpUser>{
+	
+	CpUserDao() {
+		super(CpUser.class);
+	}
+	
+	/**
+	 * @author LiangGe
+	 * @return
+	 * 获取当前所有选手信息
+	 */
+	public List<CpUser> getUserInfo() {
+		String hql = "select e from com.egov.secrecysystem.model.CpUser e where e.loginname!=:loginName";
+		return this.getCurrentSession().createQuery(hql).setParameter("loginName", "admin").list();
+	}
+}

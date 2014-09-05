@@ -1,0 +1,14 @@
+package com.egov.secrecysystem.controller;
+
+import org.directwebremoting.annotations.RemoteProxy;
+import org.directwebremoting.spring.SpringCreator;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+
+import com.egov.secrecysystem.service.CpUserService;
+
+@RemoteProxy(creator = SpringCreator.class)
+public class CpUserController {
+	@Autowired
+	private CpUserService cpUserService;
+}

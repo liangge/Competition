@@ -1,0 +1,24 @@
+package com.egov.secrecysystem.dao;
+
+import java.util.List;
+import java.util.Map;
+
+import com.egov.secrecysystem.model.SeMainmenu;
+import com.egov.secrecysystem.model.SeTitle;
+
+public class TitleDao extends AbstractHibernateDao<SeTitle> {
+
+	TitleDao() {
+		super(SeTitle.class);
+	}
+	
+	/**
+	 * @author LiangGe
+	 * @return
+	 */
+	public List<Map> getNewsInfoPage() {
+		String hql ="select new map(e.titlename as titlename, e.remark as remark, e.id as id) from com.egov.secrecysystem.model.SeTitle e";
+		List<Map> temp = this.getCurrentSession().createQuery(hql).list();
+		return temp;
+	}	
+}

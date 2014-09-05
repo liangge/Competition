@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2012-3-26 19:37:28 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="com.egov.secrecysystem.model.SeNews" table="se_news" >
+        <id name="id" type="string">
+            <column name="ID" length="36" />
+            <generator class="uuid.hex" />
+        </id>
+        <many-to-one name="seTitle" class="com.egov.secrecysystem.model.SeTitle" fetch="select">
+            <column name="TITLEID" length="36">
+                <comment>&#189;&#199;&#201;&#171;ID</comment>
+            </column>
+        </many-to-one>
+   
+        <property name="title" type="string">
+            <column name="TITLE" unique="true">
+                <comment>&#181;&#199;&#194;&#188;&#195;&#251;</comment>
+            </column>
+        </property>
+        <property name="content" type="string">
+            <column name="CONTENT">
+                <comment>&#181;&#199;&#194;&#188;&#195;&#220;&#194;&#235;</comment>
+            </column>
+        </property>
+         <property name="date" type="timestamp">
+            <column name="DATE" length="19" />
+        </property>
+        <property name="jsp" type="string">
+            <column name="JSP">
+                <comment>&#208;&#213;&#195;&#251;</comment>
+            </column>
+        </property>
+       
+         
+    </class>
+</hibernate-mapping>

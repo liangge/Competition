@@ -1,0 +1,34 @@
+package com.egov.secrecysystem.service;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.egov.secrecysystem.dao.QuestionBankDao;
+
+@Service
+public class QuestionBankService {
+	@Autowired
+	private QuestionBankDao questionBankDao;
+	
+	// 获取题库列表
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public List<Map> getSubList(String userlevel) {
+		try {
+			List<Map> sublList = questionBankDao.getSubList(Integer.parseInt(userlevel));
+			Map element = new HashMap();
+			element.put("id", "0");
+			element.put("subname", "全部题库");
+			sublList.add(element);
+			return sublList;
+		} catch (Exception e) {
+			System.out.println("getSubList error!" + e.getMessage());
+			return null;
+		}
+	}
+}

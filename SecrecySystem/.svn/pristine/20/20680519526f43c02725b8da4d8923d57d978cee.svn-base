@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2012-3-26 19:37:28 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="com.egov.secrecysystem.model.SeTestPaperRecord" table="se_testpaper_record" catalog="secrecysystem">
+        <id name="id" type="string">
+            <column name="ID" length="36" />
+            <generator class="uuid.hex" />
+        </id>
+        
+         <property name="papernum" type="java.lang.Integer">
+            <column name="PAPERNUM" />
+        </property>
+        <property name="starttime" type="timestamp">
+            <column name="STARTTIME" length="19" />
+        </property>
+        <property name="endtime" type="timestamp">
+            <column name="ENDTIME" length="19" />
+        </property>
+        <property name="examname" type="string">
+            <column name="EXAMNAME" />
+        </property>
+		 <set name="seScoreRecords" table="se_score_record" inverse="true" lazy="true" fetch="select">
+            <key>
+                <column name="TESTPAPERID" length="36" />
+            </key>
+            <one-to-many class="com.egov.secrecysystem.model.SeScoreRecord" />
+        </set>
+
+    </class>
+</hibernate-mapping>

@@ -1,0 +1,9 @@
+package com.egov.secrecysystem.dao;
+
+import com.egov.secrecysystem.model.CpTestpaperRecord;
+
+public class CpTestpaperRecordDao extends AbstractHibernateDao<CpTestpaperRecord>{
+	public CpTestpaperRecordDao() {
+		super(CpTestpaperRecord.class);
+	}
+}

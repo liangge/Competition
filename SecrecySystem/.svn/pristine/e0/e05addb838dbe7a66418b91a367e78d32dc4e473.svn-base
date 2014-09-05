@@ -1,0 +1,477 @@
+package com.egov.secrecysystem.service;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.json.simple.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.egov.secrecysystem.dao.AnswerRecordDanXuanDao;
+import com.egov.secrecysystem.dao.ScoreRecordDao;
+import com.egov.secrecysystem.dao.TestPaperRecordDao;
+import com.egov.secrecysystem.dao.UserDao;
+import com.egov.secrecysystem.model.SeAnswerRecordDanXuan;
+import com.egov.secrecysystem.model.SeAnswerRecordDuoXuan;
+import com.egov.secrecysystem.model.SeAnswerRecordPanDuan;
+import com.egov.secrecysystem.model.SeProblemDanXuan;
+import com.egov.secrecysystem.model.SeScoreRecord;
+import com.egov.secrecysystem.model.SeTestPaperRecord;
+import com.egov.secrecysystem.model.SeUser;
+import com.egov.secrecysystem.utility.Md5;
+
+@Service
+public class ScoreRecordService {
+	@Autowired
+	private ScoreRecordDao scoreRecordDao;
+	@Autowired
+	private UserDao userDao;
+	@Autowired
+	private TestPaperRecordDao testPaperRecordDao;
+	@Autowired
+	private AnswerRecordDanXuanDao answerRecordDanXuanDao;
+	//查询成绩
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public List<Map> selectScoreByLoginName(String loginName){		
+		try{
+			List<Map> list = scoreRecordDao.selectScoreByLoginName(loginName);
+			for(Map element:list){
+				Date starttime = (Date)element.get("starttime");
+				String examname=element.get("examname").toString();
+				SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd");
+				element.put("starttime", df.format(starttime).toString()+" - "+examname);
+			}
+			return list;
+		}catch(Exception e){
+			System.out.println("selectScoreByLoginName error:" + e.getMessage());
+			return null;
+		}
+		
+	}
+	// 按照部门罗列每个部门的及格率等信息
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public List<Map> summaryScoreByDepart(JSONObject summaryCondition) {
+		 try{
+			    // 索出3个分数段的人数，然后再整合成一个map对象
+						
+				List<Map> scoreSummaryInfoList = new ArrayList<Map>();
+			
+				int papernum = Integer.parseInt(summaryCondition.get("papernum").toString()); // 测试第一次信息
+				// String remark = summaryCondition.get("remark").toString(); // 获取部门信息
+				// 收索出一个学校的每个部门及总人数	
+				List<Map> studentScoreInfoList0 = userDao.getScoreInfo_getDepart();
+				
+				// 收索出不及格人数	
+				List<Map> studentScoreInfoList1 = scoreRecordDao.getScoreInfo_1(papernum,summaryCondition);
+				// 收索出及格人数
+				List<Map> studentScoreInfoList2 = scoreRecordDao.getScoreInfo_2(papernum,summaryCondition);
+				
+				// 收索出优秀人数
+				List<Map> studentScoreInfoList3 = scoreRecordDao.getScoreInfo_3(papernum,summaryCondition);
+				
+				// 开始整合到一个大的List中
+				for(Map studentScoreInfo0 : studentScoreInfoList0){
+							Map studentScoreInfo = new JSONObject();
+							
+							studentScoreInfo.put("remark", studentScoreInfo0.get("remark").toString());
+							int usercount = Integer.parseInt(studentScoreInfo0.get("usercount").toString());
+							studentScoreInfo.put("usercount", studentScoreInfo0.get("usercount").toString());
+							// 找到同部门的不及格人数
+							for(Map studentScoreInfo1 : studentScoreInfoList1){
+								if(studentScoreInfo0.get("remark").toString().equals(studentScoreInfo1.get("remark").toString()))
+								{
+									studentScoreInfo.put("unpassusercount", studentScoreInfo1.get("usercount").toString());
+									break;
+								}
+							}
+							//找到同部门的及格人数和及格率
+							for(Map studentScoreInfo2 : studentScoreInfoList2){
+								if(studentScoreInfo0.get("remark").toString().equals(studentScoreInfo2.get("remark").toString()))
+								{
+									studentScoreInfo.put("passusercount", studentScoreInfo2.get("usercount").toString());
+									float PassUserPer = Float.parseFloat(studentScoreInfo2.get("usercount").toString())/usercount;
+									float PassUserPercent = (float)(Math.round(PassUserPer*100*100))/100; // 保留2位小数
+									String PassUserPercentage = PassUserPercent + "%";
+									studentScoreInfo.put("passuserpercent",PassUserPercentage);
+									break;
+								}
+							}
+							//找到同部门的优秀人数和优秀率
+							for(Map studentScoreInfo3 : studentScoreInfoList3){
+								if(studentScoreInfo0.get("remark").toString().equals(studentScoreInfo3.get("remark").toString()))
+								{
+									studentScoreInfo.put("excellentusercount", studentScoreInfo3.get("usercount").toString());
+									float ExcellentUserPer= Float.parseFloat(studentScoreInfo3.get("usercount").toString())/usercount;
+									float ExcellentUserPercent = (float)(Math.round(ExcellentUserPer*100*100))/100;//保留2位小数
+									String ExcellentUserPercentage = ExcellentUserPercent+"%";
+									studentScoreInfo.put("excellentuserpercent", ExcellentUserPercentage);
+									break;
+								}
+							}
+							
+							
+							scoreSummaryInfoList.add(studentScoreInfo);
+						}
+				
+				//设置空白为0
+				for(Map SummaryInfo : scoreSummaryInfoList){
+					
+					if(!SummaryInfo.containsKey("unpassusercount")){
+						
+						SummaryInfo.put("unpassusercount", "0");									
+					}
+					
+	               if(!SummaryInfo.containsKey("passusercount")){
+						
+						SummaryInfo.put("passusercount", "0");									
+					}
+	               
+	               if(!SummaryInfo.containsKey("excellentusercount")){
+						
+						SummaryInfo.put("excellentusercount", "0");									
+					}
+	               
+	               if(!SummaryInfo.containsKey("usercount")){
+						
+						SummaryInfo.put("usercount", "0");									
+					}
+	               
+	               if(!SummaryInfo.containsKey("passuserpercent")){
+						
+						SummaryInfo.put("passuserpercent", "0%");									
+					}
+	               
+	               if(!SummaryInfo.containsKey("excellentuserpercent")){
+						
+						SummaryInfo.put("excellentuserpercent", "0%");									
+					}
+	               
+				}
+					
+				return scoreSummaryInfoList;
+			
+		    } catch (Exception e) {
+				System.out.println("summaryScore error:" + e.getMessage());
+				return null;
+			}
+	}
+	
+	// 查看各个部门近几年的统计信息
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public List<Map> summaryScoreByYear(JSONObject summaryCondition) {
+		 try{
+			    // 索出3个分数段的人数，然后再整合成一个map对象
+						
+				List<Map> scoreSummaryInfoList = new ArrayList<Map>();
+				int recentnum = 2;
+				// int papernum = Integer.parseInt(summaryCondition.get("recentnum").toString()); // 测试第一次信息
+				
+				String remark = summaryCondition.get("remark").toString(); // 获取部门信息
+				// 收索出一个学校的每个部门及总人数	
+				// List papernumList = testPaperRecordDao.getRecentPaperNumList(recentnum);
+				// 最近20次
+				List<Map> studentScoreInfoList0 = testPaperRecordDao.getScoreInfo_getStartTime();
+				// 获取本部门人数
+				int usercount = userDao.getUserCountByDepart(remark);
+				// 收索出不及格人数	
+				List<Map> studentScoreInfoList1 = scoreRecordDao.getScoreInfoByYear_1(remark, summaryCondition);
+				// 收索出及格人数
+				List<Map> studentScoreInfoList2 = scoreRecordDao.getScoreInfoByYear_2(remark, summaryCondition);
+				// 收索出优秀人数
+				List<Map> studentScoreInfoList3 = scoreRecordDao.getScoreInfoByYear_3(remark, summaryCondition);
+				
+				SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd");
+				// 开始整合到一个大的List中
+				for(Map studentScoreInfo0 : studentScoreInfoList0){
+							Map studentScoreInfo = new JSONObject();
+							Date starttimeDate = (Date)studentScoreInfo0.get("starttime");
+							// 设置总人数和考试开始时间
+							studentScoreInfo.put("starttime", df.format(starttimeDate));
+							studentScoreInfo.put("papernum", "第" + studentScoreInfo0.get("papernum").toString() +"次");
+							studentScoreInfo.put("usercount", usercount);
+							// 找到同部门的不及格人数
+							for(Map studentScoreInfo1 : studentScoreInfoList1){
+								if(studentScoreInfo0.get("starttime").toString().equals(studentScoreInfo1.get("starttime").toString()))
+								{
+									studentScoreInfo.put("unpassusercount", studentScoreInfo1.get("usercount").toString());
+									break;
+								}
+							}
+							//找到同部门的及格人数和及格率
+							for(Map studentScoreInfo2 : studentScoreInfoList2){
+								if(studentScoreInfo0.get("starttime").toString().equals(studentScoreInfo2.get("starttime").toString()))
+								{
+									studentScoreInfo.put("passusercount", studentScoreInfo2.get("usercount").toString());
+									float PassUserPer = Float.parseFloat(studentScoreInfo2.get("usercount").toString())/usercount;
+									float PassUserPercent = (float)(Math.round(PassUserPer*100*100))/100; // 保留2位小数
+									String PassUserPercentage = PassUserPercent + "%";
+									studentScoreInfo.put("PassUserPer",PassUserPer);
+									studentScoreInfo.put("passuserpercent",PassUserPercentage);
+									break;
+								}
+							}
+							//找到同部门的优秀人数和优秀率
+							for(Map studentScoreInfo3 : studentScoreInfoList3){
+								if(studentScoreInfo0.get("starttime").toString().equals(studentScoreInfo3.get("starttime").toString()))
+								{
+									studentScoreInfo.put("excellentusercount", studentScoreInfo3.get("usercount").toString());
+									float ExcellentUserPer= Float.parseFloat(studentScoreInfo3.get("usercount").toString())/usercount;
+									float ExcellentUserPercent = (float)(Math.round(ExcellentUserPer*100*100))/100;//保留2位小数
+									String ExcellentUserPercentage = ExcellentUserPercent+"%";
+									studentScoreInfo.put("ExcellentUserPer", ExcellentUserPer);
+									studentScoreInfo.put("excellentuserpercent", ExcellentUserPercentage);
+									break;
+								}
+							}
+							
+							
+							scoreSummaryInfoList.add(studentScoreInfo);
+						}
+				
+				//设置空白为0
+				for(Map SummaryInfo : scoreSummaryInfoList){
+					
+					if(!SummaryInfo.containsKey("unpassusercount")){
+						
+						SummaryInfo.put("unpassusercount", "0");									
+					}
+					
+	               if(!SummaryInfo.containsKey("passusercount")){
+						
+						SummaryInfo.put("passusercount", "0");									
+					}
+	               
+	               if(!SummaryInfo.containsKey("excellentusercount")){
+						
+						SummaryInfo.put("excellentusercount", "0");									
+					}
+	               
+	               if(!SummaryInfo.containsKey("usercount")) {
+						
+						SummaryInfo.put("usercount", "0");									
+					}
+	               if(!SummaryInfo.containsKey("PassUserPer")) {
+	            	   SummaryInfo.put("PassUserPer", "0");
+	               }
+	               if(!SummaryInfo.containsKey("passuserpercent")) {
+						
+						SummaryInfo.put("passuserpercent", "0%");									
+					}
+	               
+	               if(!SummaryInfo.containsKey("excellentuserpercent")) {
+						
+						SummaryInfo.put("excellentuserpercent", "0");									
+					}
+	               
+				}
+					
+				return scoreSummaryInfoList;
+			
+		    } catch (Exception e) {
+				System.out.println("summaryScore error:" + e.getMessage());
+				return null;
+			}
+	}
+	//显示分数信息
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public List<Map> getPageScoreRecord(String whereString,
+			Map<String, Object> valuesMap, String pageNum, String pageSize , String papernum) {
+		try {
+			return scoreRecordDao.getPageScoreRecord(whereString, valuesMap,
+					Integer.parseInt(pageNum), Integer.parseInt(pageSize), Integer.parseInt(papernum));
+		} catch (Exception e) {
+			System.out.println("getPageScoreRecord error");
+			e.printStackTrace();
+			return null;
+		}
+	}
+	//分数的总记录数
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public long getScoreRecordTotalCount(String whereString,
+			Map<String, Object> valuesMap) {
+		try {
+			return scoreRecordDao.getScoreRecordTotalCount(whereString,
+					valuesMap);
+		} catch (Exception e) {
+			System.out.println("getScoreRecordTotalCount error");
+			e.printStackTrace();
+			return 0;
+		}
+	}
+	//更新分数信息
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = false)
+	public boolean updateScoreRecord(JSONObject instructor) {
+
+		if (instructor.get("id").toString().equals("")) {
+			return this.saveScoreRecord(instructor);
+		} else {
+			try {
+				SeScoreRecord entity = scoreRecordDao.findById(instructor
+						.get("id").toString());
+				// entity.setSeUser(userDao.findByProperty("loginname", instructor.get("loginname").toString()).get(0));				
+				entity.setDanxuanscore(Integer.parseInt(instructor.get("danxuanscore").toString()));
+				entity.setDuoxuanscore(Integer.parseInt(instructor.get("duoxuanscore").toString()));
+				entity.setPanduanscore(Integer.parseInt(instructor.get("panduanscore").toString()));
+				entity.setTotalscore(Integer.parseInt(instructor.get("totalscore").toString()));
+				entity.setScoreremark(instructor.get("scoreremark").toString());
+
+				scoreRecordDao.update(entity);
+				return true;
+			} catch (Exception e) {
+				e.printStackTrace();
+				return false;
+			}
+		}
+	}
+	//保存分数信息
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = false)
+	public boolean saveScoreRecord(JSONObject instructor) {
+
+		try {
+
+			SeScoreRecord entity = new SeScoreRecord();
+
+			entity.setDanxuanscore(Integer.parseInt(instructor.get("danxuanscore").toString()));
+			entity.setDanxuanscore(Integer.parseInt(instructor.get("duoxuanscore").toString()));
+			entity.setDanxuanscore(Integer.parseInt(instructor.get("panduanscore").toString()));
+			entity.setDanxuanscore(Integer.parseInt(instructor.get("totalscore").toString()));
+			entity.setScoreremark(instructor.get("scoreremark").toString());
+
+			scoreRecordDao.save(entity);
+			return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	//删除分数信息
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = false)
+	public boolean deleteScoreRecord(List<String> ids) {
+
+		try {
+			for (String id : ids) {
+				SeScoreRecord entity = scoreRecordDao.findById(id);
+				scoreRecordDao.delete(entity);
+			}
+			return true;
+		} catch (Exception e) {
+			System.out.println("deleteInstructors error");
+			e.printStackTrace();
+			return false;
+		}
+	}
+	// 批量导出分数记录信息
+		@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+		public List<Map> getScoreRecordInfoExcel(int papernum) {
+			try {
+				return scoreRecordDao.getScoreRecordInfoExcel(papernum);
+			} catch (Exception e) {
+				e.printStackTrace();
+				return null;
+			}
+		}
+		
+		/**
+		 * @author yangfan
+		 * @param loginName
+		 * @param paperNum
+		 * @param remark
+		 * @param testPaperRecordId
+		 * @return
+		 */
+		public JSONObject caculateScoreByPerson(String loginName, String paperNum,String remark
+				,String testPaperRecordId){
+			
+			int totalScore = -1;
+			int danxuanScore = -1;
+			int duoxuanScore = -1;
+			int panduanScore = -1;
+			String scoreRemark = ""; 
+			
+			boolean isTheMustRightProblemWrong = false;
+			SeUser seUser = userDao.getUserByLoginName(loginName);
+			SeTestPaperRecord seTestPaperRecord = testPaperRecordDao.findById(testPaperRecordId);
+			
+			List<SeAnswerRecordDanXuan> danxuanWrongList = answerRecordDanXuanDao.findDanxuanRecordByUserAndPaperNum(seUser, paperNum);
+			List<SeAnswerRecordDuoXuan> duoxuanWrongList = answerRecordDanXuanDao.findDuoxuanRecordByUserAndPaperNum(seUser, paperNum);
+			List<SeAnswerRecordPanDuan> panduanWrongList = answerRecordDanXuanDao.findPanduanRecordByUserAndPaperNum(seUser, paperNum);
+			
+			if(isTheMustRightProblemWrong == false){
+				for(SeAnswerRecordDanXuan sedanxuan : danxuanWrongList){
+					if(sedanxuan.getSeProblemDanXuan().getMustright().equals("1")){
+						
+						totalScore = 0;
+						isTheMustRightProblemWrong = true;
+						break;
+					}
+						
+				}
+			}
+			
+			if(isTheMustRightProblemWrong == false){
+				for(SeAnswerRecordDuoXuan seduoxuan : duoxuanWrongList){
+					if(seduoxuan.getSeProblemDuoXuan().getMustright().equals("1")){
+						totalScore = 0;
+						isTheMustRightProblemWrong = true;
+						break;
+					}
+						
+				}
+			}
+			
+			if(isTheMustRightProblemWrong == false){
+				for(SeAnswerRecordPanDuan sepanduan : panduanWrongList){
+					if(sepanduan.getSeProblemPanDuan().getMustright().equals("1")){
+						totalScore = 0;
+						isTheMustRightProblemWrong = true;
+						break;
+					}
+				}
+			}
+			
+			//保存成绩表
+			
+			List danxuanScoreList  = answerRecordDanXuanDao.caculateDanXuanScoreByPerson(loginName, paperNum);
+			List duoxuanScoreList  = answerRecordDanXuanDao.caculateDuoXuanScoreByPerson(loginName, paperNum);
+			List panduanScoreList  = answerRecordDanXuanDao.caculatePanduanScoreByPerson(loginName, paperNum);
+			danxuanScore = Integer.parseInt(danxuanScoreList.get(0).toString());
+			duoxuanScore = Integer.parseInt(duoxuanScoreList.get(0).toString());
+			panduanScore = Integer.parseInt(panduanScoreList.get(0).toString());
+			
+
+			if(isTheMustRightProblemWrong == false){
+				totalScore = danxuanScore + duoxuanScore + panduanScore;
+			}else{
+				scoreRemark = scoreRemark + "必对题答错";
+			}
+			
+			SeScoreRecord seScoreRecord = new SeScoreRecord();
+			seScoreRecord.setDanxuanscore(danxuanScore);
+			seScoreRecord.setDuoxuanscore(duoxuanScore);
+			seScoreRecord.setPanduanscore(panduanScore);
+			seScoreRecord.setTotalscore(totalScore);
+			seScoreRecord.setRemark(remark);
+			seScoreRecord.setSeUser(seUser);
+			seScoreRecord.setSeTestPaperRecord(seTestPaperRecord);
+			seScoreRecord.setScoreremark(scoreRemark);
+			scoreRecordDao.save(seScoreRecord);
+			scoreRecordDao.getSession().flush();
+			scoreRecordDao.getSession().clear();
+			
+			JSONObject jsob = new JSONObject();
+			jsob.put("totalScore",totalScore);
+			if(isTheMustRightProblemWrong == false){
+				jsob.put("scoreremark"," ");
+			} else{
+				jsob.put("scoreremark", " 必对题答错");
+			}
+			
+			return jsob;
+		}
+}

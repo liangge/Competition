@@ -1,0 +1,31 @@
+package com.egov.secrecysystem.controller;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.directwebremoting.annotations.RemoteMethod;
+import org.directwebremoting.annotations.RemoteProxy;
+import org.directwebremoting.spring.SpringCreator;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.egov.secrecysystem.model.Function;
+import com.egov.secrecysystem.service.AnswerRecordPanDuanService;
+
+
+@RemoteProxy(creator = SpringCreator.class)
+public class AnswerRecordPanDuanController {
+	@Autowired
+	private AnswerRecordPanDuanService answerRecordPanDuanService;
+	// 根据
+	@RemoteMethod
+	public Map getAnswerRateShow(String filterString, String pageNum,String pageSize,String problemlevel, String type, String nameLike) {
+		Map map = new HashMap();
+		String whereString = Function.initSearchHql_whereString_(filterString);
+		Map<String, Object> paramsMap = Function.initSearchValues(filterString);
+		List<Map> result = answerRecordPanDuanService.getAnswerRateShow(whereString, paramsMap, pageNum, pageSize,problemlevel,type,nameLike);
+		map.put("totalProperty", answerRecordPanDuanService.getAnswerTotalCount(whereString, paramsMap,problemlevel,type,nameLike));
+		map.put("root", result);
+		return map;
+	}
+}

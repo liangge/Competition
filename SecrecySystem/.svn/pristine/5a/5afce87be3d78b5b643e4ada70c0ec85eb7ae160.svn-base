@@ -1,0 +1,460 @@
+package com.egov.secrecysystem.service;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.json.simple.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.egov.secrecysystem.dao.AnswerRecordDuoXuanDao;
+import com.egov.secrecysystem.dao.PaperDuoXuanDao;
+import com.egov.secrecysystem.dao.ProblemDuoXuanDao;
+import com.egov.secrecysystem.dao.QuestionBankDao;
+import com.egov.secrecysystem.dao.UserDao;
+import com.egov.secrecysystem.model.SeAnswerRecordDanXuan;
+import com.egov.secrecysystem.model.SeAnswerRecordDuoXuan;
+import com.egov.secrecysystem.model.SePaperDanXuan;
+import com.egov.secrecysystem.model.SePaperDuoXuan;
+import com.egov.secrecysystem.model.SeProblemDanXuan;
+import com.egov.secrecysystem.model.SeProblemDuoXuan;
+import com.egov.secrecysystem.model.SeQuestionBank;
+import com.egov.secrecysystem.model.SeUser;
+
+@Service
+@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+public class ProblemDuoXuanService {
+
+	@Autowired
+	private ProblemDuoXuanDao problemDuoXuandao;
+	@Autowired
+	private UserDao userDao;
+	@Autowired
+	private AnswerRecordDuoXuanDao answerRecordDuoXuanDao;
+	@Autowired
+	private QuestionBankDao questionBankDao;
+	@Autowired
+	private PaperDuoXuanDao paperDuoXuanDao;
+
+	public ProblemDuoXuanDao getProblemDuoXuandao() {
+		return problemDuoXuandao;
+	}
+
+	public void setProblemDuoXuandao(ProblemDuoXuanDao problemDuoXuandao) {
+		this.problemDuoXuandao = problemDuoXuandao;
+	}
+
+	public UserDao getUserDao() {
+		return userDao;
+	}
+
+	public void setUserDao(UserDao userDao) {
+		this.userDao = userDao;
+	}
+
+	public AnswerRecordDuoXuanDao getAnswerRecordDuoXuanDao() {
+		return answerRecordDuoXuanDao;
+	}
+
+	public void setAnswerRecordDuoXuanDao(
+			AnswerRecordDuoXuanDao answerRecordDuoXuanDao) {
+		this.answerRecordDuoXuanDao = answerRecordDuoXuanDao;
+	}
+
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public List<Map> getPageInstructors(String whereString,
+			Map<String, Object> valuesMap, String pageNum, String pageSize,String paperNum,String userLevel) {
+		try {
+			return problemDuoXuandao.getPageInstructors(whereString, valuesMap,
+					Integer.parseInt(pageNum), Integer.parseInt(pageSize),Integer.parseInt(paperNum),userLevel);
+		} catch (Exception e) {
+			System.out.println("getPageInstructors error");
+			e.printStackTrace();
+			return null;
+		}
+	}
+	//初始化多选题页面
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public List<Map> pageInit(String whereString,
+			Map<String, Object> valuesMap, String pageNum, String pageSize) {
+		try {
+			return problemDuoXuandao.pageInit(whereString, valuesMap,
+					Integer.parseInt(pageNum), Integer.parseInt(pageSize));
+		} catch (Exception e) {
+			System.out.println("getPageInstructors error");
+			e.printStackTrace();
+			return null;
+		}
+	}
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public long getInstructorsTotalCount(String whereString,
+			Map<String, Object> valuesMap) {
+		try {
+			return problemDuoXuandao.getInstructorsTotalCount(whereString,
+					valuesMap);
+		} catch (Exception e) {
+			System.out.println("getInstructorsTotalCount error");
+			e.printStackTrace();
+			return 0;
+		}
+	}
+
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = false)
+	public String updateInstructorAllInfo(JSONObject instructor) {
+
+		if (instructor.get("id").toString().equals("")) {
+			return this.saveInstructor(instructor);
+		} else {
+			try {
+				String result="";
+				SeProblemDuoXuan entity = problemDuoXuandao.findById(instructor
+						.get("id").toString());
+				if(entity.getSeAnswerRecordDuoXuans().size() >=1
+					||entity.getSePaperDuoXuans().size() >=1){
+					result="falure";
+				}
+				else{
+					entity.setProblemlevel(instructor.get("problemlevel")
+							.toString());
+					entity.setMustright(instructor.get("mustright").toString());
+					entity.setKeyproblem(instructor.get("keyproblem").toString());
+					entity.setQuestion(instructor.get("question").toString());
+					entity.setOption1(instructor.get("option1").toString());
+					entity.setOption2(instructor.get("option2").toString());
+					entity.setOption3(instructor.get("option3").toString());
+					entity.setOption4(instructor.get("option4").toString());
+					entity.setAnswer(instructor.get("answer").toString());
+					entity.setSeQuestionBank(questionBankDao.findByProperty("subname", instructor.get("subname").toString()).get(0));
+					problemDuoXuandao.update(entity);
+					result="success";
+				}
+				
+				return result;
+			} catch (Exception e) {
+				e.printStackTrace();
+				return "error";
+			}
+		}
+	}
+
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = false)
+	public String saveInstructor(JSONObject instructor) {
+
+		try {
+
+			SeProblemDuoXuan entity = new SeProblemDuoXuan();
+
+			entity.setProblemlevel(instructor.get("problemlevel").toString());
+			entity.setMustright(instructor.get("mustright").toString());
+			entity.setKeyproblem(instructor.get("keyproblem").toString());
+			entity.setQuestion(instructor.get("question").toString());
+			entity.setOption1(instructor.get("option1").toString());
+			entity.setOption2(instructor.get("option2").toString());
+			entity.setOption3(instructor.get("option3").toString());
+			entity.setOption4(instructor.get("option4").toString());
+			entity.setAnswer(instructor.get("answer").toString());
+			//entity.setSeQuestionBank(questionBankDao.findByProperty("subname", instructor.get("subname").toString()).get(0));
+			if(questionBankDao.findBySubname(Integer.parseInt(instructor.get("problemlevel").toString().trim()),instructor.get("subname").toString().trim()).size() > 0) {
+				entity.setSeQuestionBank(questionBankDao.findBySubname(Integer.parseInt(instructor.get("problemlevel").toString().trim()),instructor.get("subname").toString().trim()).get(0));
+			} else {
+				SeQuestionBank seQuestionBank = new SeQuestionBank();
+				seQuestionBank.setProblemlevel(Integer.parseInt(instructor.get("problemlevel").toString()));
+				seQuestionBank.setSubname(instructor.get("subname").toString().trim());
+				questionBankDao.save(seQuestionBank);
+				entity.setSeQuestionBank(seQuestionBank);
+			}
+			problemDuoXuandao.save(entity);
+			return "success";
+		} catch (Exception e) {
+			e.printStackTrace();
+			return "error";
+		}
+	}
+
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = false)
+	public String deleteInstructors(List<String> ids) {
+
+		String result="";
+		try {
+			for (String id : ids) {
+				SeProblemDuoXuan entity = problemDuoXuandao.findById(id);
+				if(entity.getSePaperDuoXuans().size() >=1||
+						entity.getSePaperDuoXuans().size() >=1) {
+					result="falure";
+				} else {
+					
+					problemDuoXuandao.delete(entity);
+					result="success";
+				}
+				//System.out.println("当前题目已经有出卷记录次数 ： " + entity.getSePaperDanXuans().size());
+			}
+			return result;
+		} catch (Exception e) {
+			System.out.println("deleteDanXuan error");
+			e.printStackTrace();
+			return "error";
+		}
+	}
+
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public String checkInstructorsData(List<JSONObject> instructors) {
+		try {
+			int instructorcount = 1;
+			for (JSONObject instructor : instructors) {
+				instructorcount++;
+			}
+			return null;
+		} catch (Exception e) {
+			return e.getMessage();
+		}
+
+	}
+
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = false)
+	public boolean importInstructors(List<JSONObject> instructors) {
+		try {
+			int instructorcount = 0;
+			SeProblemDuoXuan entity;
+			for (JSONObject instructor : instructors) {
+				entity = new SeProblemDuoXuan();
+				/*String subId = instructor.get("subname").toString();
+				SeQuestionBank  sqb = questionBankDao.findById(subId);*/
+				if(questionBankDao.findBySubname(Integer.parseInt(instructor.get("problemlevel").toString().trim()),instructor.get("subname").toString().trim()).size() > 0) {
+					entity.setSeQuestionBank(questionBankDao.findBySubname(Integer.parseInt(instructor.get("problemlevel").toString().trim()),instructor.get("subname").toString().trim()).get(0));
+				} else {
+					SeQuestionBank seQuestionBank = new SeQuestionBank();
+					seQuestionBank.setProblemlevel(Integer.parseInt(instructor.get("problemlevel").toString()));
+					seQuestionBank.setSubname(instructor.get("subname").toString().trim());
+					questionBankDao.save(seQuestionBank);
+					entity.setSeQuestionBank(seQuestionBank);
+				}
+				
+				entity.setProblemlevel(instructor.get("problemlevel")
+						.toString());
+				entity.setMustright(instructor.get("mustright").toString());
+				entity.setKeyproblem(instructor.get("keyproblem").toString());
+				entity.setQuestion(instructor.get("question").toString());
+				entity.setOption1(instructor.get("option1").toString());
+				entity.setOption2(instructor.get("option2").toString());
+				entity.setOption3(instructor.get("option3").toString());
+				entity.setOption4(instructor.get("option4").toString());
+				entity.setAnswer(instructor.get("answer").toString());
+//				entity.setSeQuestionBank(sqb);
+
+				problemDuoXuandao.save(entity);
+				if (instructorcount % 50 == 0) {
+					problemDuoXuandao.getSession().flush();
+					problemDuoXuandao.getSession().clear();
+				}
+				instructorcount++;
+			}
+			return true;
+		} catch (Exception e) {
+			System.out.println("importInstructors error");
+			e.printStackTrace();
+			problemDuoXuandao.getSession().getTransaction().rollback();
+			return false;
+		}
+	}
+
+	// 批量导出信息
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public List<Map> getInstructorsInfoExcel() {
+		try {
+			return problemDuoXuandao.getInstructorsInfoExcel();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	/**
+	 * @author yangfan
+	 * @param instructor
+	 */
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = false)
+	public boolean insertDuoXuanAnswerRecord(List<JSONObject> duoxuanAnswers) {
+		for (JSONObject js : duoxuanAnswers) {
+			try {
+				SeAnswerRecordDuoXuan seAnswerRecordDuoXuan = new SeAnswerRecordDuoXuan();
+
+				SeUser seUser = userDao.getRoleByLoginName(js.get("loginname")
+						.toString());
+				SeProblemDuoXuan seProblemDuoXuan = problemDuoXuandao
+						.findById(js.get("duoxuanid").toString());
+
+				seAnswerRecordDuoXuan.setPapernum(Integer.parseInt(js.get(
+						"papernum").toString()));
+				seAnswerRecordDuoXuan.setRemark(js.get("remark").toString());
+				seAnswerRecordDuoXuan.setSeUser(seUser);
+				seAnswerRecordDuoXuan.setSeProblemDuoXuan(seProblemDuoXuan);
+
+				int answerValue = Integer.parseInt(js.get("answer").toString());
+				String answer = "";
+				if (answerValue != 1) {
+					if (answerValue % 2 == 0) {
+						answerValue = answerValue / 2;
+						answer += 'A';
+					}
+					if (answerValue % 3 == 0) {
+						answerValue = answerValue / 3;
+						answer += 'B';
+					}
+					if (answerValue % 5 == 0) {
+						answerValue = answerValue / 5;
+						answer += 'C';
+					}
+					if (answerValue % 7 == 0) {
+						answerValue = answerValue / 7;
+						answer += 'D';
+					}
+					// answer = String.valueOf((char) (answerValue - 1 + 'A'));
+					if (answer.equals(seProblemDuoXuan.getAnswer())) {
+						seAnswerRecordDuoXuan.setIsright(1);
+					} else {
+						seAnswerRecordDuoXuan.setIsright(0);
+					}
+				} else {
+					answer = null;
+					seAnswerRecordDuoXuan.setIsright(0);
+				}
+
+				seAnswerRecordDuoXuan.setAnswer(answer);
+				answerRecordDuoXuanDao.save(seAnswerRecordDuoXuan);
+
+			} catch (Exception e) {
+				e.printStackTrace();
+				return false;
+			}
+
+		}
+
+		return true;
+
+	}
+	//获取题目等级列表List
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public List<Map> getProblemLevelList() {
+		try {
+			List<Map> problemLevelList = problemDuoXuandao.getProblemLevelList();
+			for(Map element : problemLevelList) {
+				String num = "" + element.get("levelname");
+				String levelname = "";
+				// 0-共同题目，1-一级保密，2-二级保密，3-三级保密依次类推
+				// 修改显示内容
+				if("0".equals(num)) {
+					levelname = "共同题目";
+				} else {
+					levelname = num + "级保密题目";
+				}
+				element.put("levelname", levelname);
+			}
+			// 000 - 代表查看所有题目
+			Map allProblem = new HashMap();
+			allProblem.put("problemlevel", "000");
+			allProblem.put("levelname", "全部等级题目");
+			
+			problemLevelList.add(allProblem);
+			
+			return problemLevelList;
+		} catch (Exception e) {
+			System.out.println("getProblemLevelList error!" + e.getMessage());
+			return null;
+		}
+	}
+	
+	/**
+	 * @author LiangGe
+	 * @param paperInfoCondition
+	 * @return
+	 */
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = false)
+	public List<Map> generateExamPaper(String problemlevel, String subid, String duoxuanKeyNumStrig, int papernum) {
+		// 选择题出题30题，必对一题，关键题数量根据用户选择
+		int duoxuanKeyNum = Integer.parseInt(duoxuanKeyNumStrig);
+		int mustRightNum = 0;
+		int putongNum = 30 - duoxuanKeyNum - mustRightNum;
+		// 用户等级和子题目选择
+		System.out.println("开始调用题目信息");
+		List<Map> problemList = problemDuoXuandao.generatePutongProblem(problemlevel, subid, putongNum);
+		List<Map> keyList = problemDuoXuandao.generateKeyProblem(problemlevel, subid, duoxuanKeyNum);
+		// List<Map> mustList = problemDuoXuandao.generateMustProblem(problemlevel, subid, mustRightNum);
+		
+		for(Map elemMap: keyList) {
+			problemList.add(elemMap);
+		}
+/*		for(Map elemMap: mustList) {
+			problemList.add(elemMap);
+		}*/
+		// 存储试卷
+		for(Map elemMap: problemList) {
+			elemMap.put("subidmark", subid);
+			SePaperDuoXuan entity = new SePaperDuoXuan();
+			entity.setPapernum(papernum);
+			entity.setUserlevel(problemlevel);
+			entity.setSeProblemDuoXuan(problemDuoXuandao.findById((elemMap.get("id").toString())));
+			paperDuoXuanDao.save(entity);
+		}
+		System.out.println("service ceng : " + problemList.toString());
+		return problemList;
+	}
+	/**
+	 * @author LiangGe
+	 * @param id
+	 * @param problemlevel
+	 * @param subid
+	 * @param mustright
+	 * @param keyproblem
+	 * @param papernum
+	 * @param problemids
+	 * @return
+	 */
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = false)
+	public List<Map> changeProblem(String id,String problemlevel,String subid,String mustright,String keyproblem,int papernum,List<String> problemids) {
+		try {
+			List<Map> list = problemDuoXuandao.getOneDuoxuanProblem(problemlevel,subid,mustright,keyproblem,problemids);
+			if(list.size() < 1 ) {
+				return null;
+			}
+			Map map = list.get(0);
+			// 多对一、一对多的更新维护关系
+			SePaperDuoXuan entity = paperDuoXuanDao.findPaperDuoxuan(id,problemlevel,papernum);
+
+			SeProblemDuoXuan seProblemDuoXuan = problemDuoXuandao.findById(map.get("id").toString());
+			entity.setSeProblemDuoXuan(seProblemDuoXuan);
+			System.out.println("陈功！");
+
+			return list;
+		} catch (Exception e) {
+			System.out.println("changeProblem error!" + e.getMessage());
+			return null;
+		}
+	}
+	
+	/**
+	 * @author LiangGe
+	 * @param papernum
+	 * @param problemlevel
+	 * @param id
+	 * @return
+	 */
+	// 更改单选题目存储
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = false)
+	public boolean saveChangeProblemByHander(int papernum, String problemlevel, String nowid, String id) {
+		try {
+			SePaperDuoXuan entity = paperDuoXuanDao.findPaperDuoxuan(nowid, problemlevel, papernum);
+			SeProblemDuoXuan seProblemDuoXuan = problemDuoXuandao.findById(id);
+			entity.setSeProblemDuoXuan(seProblemDuoXuan);
+			paperDuoXuanDao.update(entity);
+			return true;
+		} catch (Exception e) {
+			// TODO: handle exception
+			System.out.println("saveChangeProblemByHander error!" + e.getMessage());
+			return false;
+		}
+	}
+
+}

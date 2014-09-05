@@ -1,0 +1,40 @@
+package com.egov.secrecysystem.service;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.egov.secrecysystem.dao.CpTestpaperRecordDao;
+
+@Service
+public class CpTestpaperRecordService {
+	@Autowired
+	private CpTestpaperRecordDao cpTestpaperRecordDao;
+	/**
+	 * @author yangfan
+	 * @return
+	 */
+	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+	public List<Map> getTestPaperRecordList() {
+		try {
+			List<Map> paperNumList = cpTestpaperRecordDao.getTestPaperRecordList();
+			for(Map element : paperNumList) {
+				Date starttime = (Date)element.get("starttime");
+				Date endtime = (Date)element.get("endtime");
+				SimpleDateFormat df=new SimpleDateFormat("yyyy-MM-dd HH:mm");
+				element.put("starttime", df.format(starttime));
+				element.put("endtime", df.format(endtime));
+			}
+			return paperNumList;
+		} catch (Exception e) {
+			System.out.println("getpaperNumList error!" + e.getMessage());
+			return null;
+		}
+	}
+}

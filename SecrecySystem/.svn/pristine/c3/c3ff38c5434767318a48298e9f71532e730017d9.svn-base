@@ -1,0 +1,90 @@
+package com.egov.secrecysystem.dao;
+
+import java.util.List;
+import java.util.Map;
+
+import org.hibernate.Query;
+
+import com.egov.secrecysystem.model.SeNews;
+
+public class NewsDao extends AbstractHibernateDao<SeNews> {
+
+	NewsDao() {
+		super(SeNews.class);
+	}
+	
+	/**
+	 * @author LiangGe
+	 * @param whereString
+	 * @param valuesMap
+	 * @param pageNum
+	 * @param pageSize
+	 * @return
+	 */
+	// 获取新闻信息List
+	public List<Map> pageInit(String whereString,
+			Map<String, Object> valuesMap, int pageNum, int pageSize) {
+		String hql ="select new map(e.id as id, e.title as title, e.content as content, e.date as date, e.jsp as jsp, e.seTitle.titlename as titlename) "
+				+ " from com.egov.secrecysystem.model.SeNews e ";
+		hql += whereString;
+		Query query = this.getCurrentSession().createQuery(hql)
+				.setFirstResult(pageNum).setMaxResults(pageSize);
+		String[] perchs = valuesMap.keySet().toArray(new String[0]);
+
+		for (int i = 0; i < perchs.length; i++) {
+			if (perchs[i].equals("score")) {
+				query.setParameter(perchs[i],
+						Integer.parseInt((String) valuesMap.get(perchs[i])));
+			} else {
+				query.setParameter(perchs[i], valuesMap.get(perchs[i]));
+			}
+		}
+		return query.list();
+	}
+	
+	/**
+	 * @author LiangGe
+	 * @param whereString
+	 * @param valuesMap
+	 * @return
+	 */
+	// 获取新闻总数个数
+	public long getNewsCount(String whereString,
+			Map<String, Object> valuesMap) {
+		String hql ="from com.egov.secrecysystem.model.SeNews e ";
+		hql += whereString;
+		Query query = this.getCurrentSession().createQuery(hql);
+		String[] perchs = valuesMap.keySet().toArray(new String[0]);
+		for (int i = 0; i < perchs.length; i++) {
+			query.setParameter(perchs[i], valuesMap.get(perchs[i]));
+		}
+		return query.list().size();
+	}
+	
+	/**
+	 * @author LiangGe
+	 * @param id
+	 * @return
+	 */
+	public List<Map> getNewsTitle(String id) {
+		System.out.println("id = " + id);
+		String hql ="select new map(e.id as id, e.title as title, e.date as date, e.jsp as jsp, e.seTitle.titlename as titlename) from com.egov.secrecysystem.model.SeNews e";
+		hql += " where e.seTitle.id =:id order by e.date desc";
+		System.out.println("查询：" + hql);
+		List<Map> temp = this.getCurrentSession().createQuery(hql).setParameter("id", id).list();
+		return temp;
+	}
+	
+	/**
+	 * @author LiangGe
+	 * @param id
+	 * @return
+	 */
+	public List<Map> getNewsInfoDetail(String id) {
+		String hql ="select new map(e.id as id, e.title as title, e.date as date, e.jsp as jsp, e.seTitle.titlename as titlename, e.content as content) from com.egov.secrecysystem.model.SeNews e";
+		hql += " where e.id =:id order by e.date desc";
+		System.out.println("查询：" + hql);
+		List<Map> temp = this.getCurrentSession().createQuery(hql).setParameter("id", id).list();
+		return temp;
+	}
+}

@@ -1,0 +1,24 @@
+﻿// FCKConfig.AutoDetectLanguage	= false ;
+// 操作按钮选择
+FCKConfig.ToolbarSets["Middle"] = [
+	['Source','DocProps'],
+	['Cut','Copy','Paste','PasteText','PasteWord','-','Print','SpellCheck'],
+	'/',
+	['Bold','Italic','Underline','StrikeThrough','-','Subscript','Superscript'],
+	['OrderedList','UnorderedList','-','Outdent','Indent','Blockquote','CreateDiv'],
+	['JustifyLeft','JustifyCenter','JustifyRight','JustifyFull'],
+	['Link','Unlink','Anchor'],
+	['Image','Flash','Table','Rule','Smiley','SpecialChar','PageBreak'],
+	'/',
+	['Style','FontFormat','FontName','FontSize'],
+	['TextColor','BGColor'],
+	['FitWindow','ShowBlocks','-','About']		// No comma for the last row.
+] ;
+// 字体属性
+FCKConfig.FontNames		= '宋体;楷体_GB2312;黑体;隶书;Arial;Times New Roman;Comic Sans MS;Courier New;Tahoma;Times New Roman;Verdana' ;
+// 回车换行
+FCKConfig.EnterMode = 'br' ;			// p | div | br
+FCKConfig.ShiftEnterMode = 'p' ;	// p | div | br
+
+FCKConfig.LinkUploadAllowedExtensions	= ".(7z|aiff|asf|avi|bmp|csv|doc|fla|flv|gif|gz|gzip|jpeg|jpg|mid|mov|mp3|mp4|mpc|mpeg|mpg|ods|odt|pdf|png|ppt|pxd|qt|ram|rar|rm|rmi|rmvb|rtf|sdc|sitd|swf|sxc|sxw|tar|tgz|tif|tiff|txt|vsd|wav|wma|wmv|xls|xml|zip|docx)$" ;			// empty for all
+FCKConfig.ImageUploadAllowedExtensions	= ".(jpg|gif|jpeg|png|bmp|abc)$" ;		// empty for all

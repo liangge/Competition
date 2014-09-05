@@ -1,0 +1,12 @@
+package com.egov.secrecysystem.service;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.egov.secrecysystem.dao.CpTestpaperRecordDao;
+
+@Service
+public class CpTestpaperRecordService {
+	@Autowired
+	private CpTestpaperRecordDao cpTestpaperRecordDao;
+}

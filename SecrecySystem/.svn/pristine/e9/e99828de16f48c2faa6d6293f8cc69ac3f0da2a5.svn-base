@@ -1,0 +1,186 @@
+package com.egov.secrecysystem.controller;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.directwebremoting.annotations.RemoteMethod;
+import org.directwebremoting.annotations.RemoteProxy;
+import org.directwebremoting.spring.SpringCreator;
+import org.json.simple.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.egov.secrecysystem.dao.PaperDanXuanDao;
+import com.egov.secrecysystem.model.Function;
+import com.egov.secrecysystem.service.PaperDanXuanService;
+import com.egov.secrecysystem.service.ProblemDanXuanService;
+import com.egov.secrecysystem.service.ProblemDuoXuanService;
+import com.egov.secrecysystem.service.ProblemPanDuanService;
+
+
+@RemoteProxy(creator = SpringCreator.class)
+public class ProblemDanXuanController {
+	@Autowired
+	private ProblemDanXuanService problemDanXuanService;
+	@Autowired
+	private ProblemDuoXuanService problemDuoXuanService;
+	@Autowired
+	private ProblemPanDuanService problemPanDuanService;
+	@Autowired
+	private PaperDanXuanService paperDanXuanService;	
+	
+	//显示单选题处理
+	@RemoteMethod
+	public Map paginationShow(String filterString, String pageNum,
+			String pageSize,String paperNum,String userLevel) {
+		
+		Map map = new HashMap();
+		String whereString = Function.initSearchHql_whereString_(filterString);
+		Map<String, Object> paramsMap = Function.initSearchValues(filterString);
+		List<Map> result = problemDanXuanService.getPageInstructors(
+				whereString, paramsMap, pageNum, pageSize,paperNum,userLevel);
+		map.put("totalProperty", problemDanXuanService
+				.getInstructorsTotalCount(whereString, paramsMap));
+		map.put("root", result);
+		return map;
+	}
+	//初始化单选题页面
+	@RemoteMethod
+	public Map pageInit(String filterString, String pageNum,
+			String pageSize) {
+		
+		Map map = new HashMap();
+		String whereString = Function.initSearchHql_whereString_(filterString);
+		Map<String, Object> paramsMap = Function.initSearchValues(filterString);
+		List<Map> result = problemDanXuanService.pageInit(
+				whereString, paramsMap, pageNum, pageSize);
+		map.put("totalProperty", problemDanXuanService
+				.getInstructorsTotalCount(whereString, paramsMap));
+		map.put("root", result);
+		return map;
+	}
+	//更新单选题信息
+	@RemoteMethod
+	public String updateInstructorAllInfo(JSONObject instructor) {
+		return problemDanXuanService.updateInstructorAllInfo(instructor);
+	}
+	//刪除单选题信息
+	@RemoteMethod
+	public String deleteInstructors(List<String> ids){
+		return problemDanXuanService.deleteInstructors(ids);
+	}
+	
+	@RemoteMethod
+	//插入单选题答案
+	public boolean insertDanXuanAnswerRecord(List<JSONObject> danxuanAnswers) {
+		
+		return problemDanXuanService.insertDanXuanAnswerRecord(danxuanAnswers);
+	}
+	
+	
+	//获取题目等级类型List
+	@RemoteMethod
+	public List<Map> getProblemLevelList() {
+		return problemDanXuanService.getProblemLevelList();
+	}
+
+	/**
+	 * @author LiangGe
+	 * @return
+	 */
+	@RemoteMethod
+	public Map generateExamPaper(String isGeneratePaper, String problemlevel, String subid, String danxuanKeyNum, String papernum) {
+		Map map = new HashMap();
+		List<Map> result = null;
+		System.out.println("进去！！" + "problemlevel = " + problemlevel);
+		System.out.println("参数：isGeneratePaper=" + isGeneratePaper + "problemlevel=" + problemlevel + "subid = " + subid);
+		System.out.println("参数：danxuanKeyNum=" + danxuanKeyNum + "papernum=" + papernum);
+		// 没有出卷，则生成试卷
+		if("0".equals(isGeneratePaper)) {
+			System.out.println("生成单选试卷！");
+			result = problemDanXuanService.generateExamPaper(problemlevel, subid, danxuanKeyNum, Integer.parseInt(papernum));
+		} else {
+			// 如果是1，则读取试卷
+			System.out.println("读取单选试卷！ subid = " + subid + "problemlevel" + problemlevel + "papernum" + papernum);
+			result = paperDanXuanService.getExamPaper(subid, problemlevel,Integer.parseInt(papernum));
+		}
+		map.put("totalProperty", result.size());
+		map.put("root", result);
+		System.out.println("获取信息返回：" + map.toString());
+		return map;
+	}
+	
+	/**
+	 * @author LiangGe
+	 * @param id
+	 * @param problemlevel
+	 * @param subid
+	 * @param mustright
+	 * @param keyproblem
+	 * @param papernum
+	 * @param problemids
+	 * @return
+	 */
+	@RemoteMethod
+	public JSONObject changeProblem(String id, String problemlevel, String subid, String mustright, String keyproblem, String papernum, List<String> problemids) {
+
+		List<Map> result = problemDanXuanService.changeProblem(id,problemlevel,subid,mustright,keyproblem,Integer.parseInt(papernum),problemids);
+		if(result == null || result.size() < 1) {
+			return null;
+		}
+		Map map = result.get(0);
+		JSONObject jsonObject = new JSONObject();
+		jsonObject.put("id", map.get("id"));
+		jsonObject.put("question", map.get("question"));
+		jsonObject.put("option1", map.get("option1"));
+		jsonObject.put("option2", map.get("option2"));
+		jsonObject.put("option3", map.get("option3"));
+		jsonObject.put("option4", map.get("option4"));
+		return jsonObject;
+	}
+	
+	/**
+	 * @author LiangGe
+	 * @param curExamPanel 0代表单选、1代表多选、2代表判断
+	 * @param problemlevel
+	 * @param subid
+	 * @param mustright
+	 * @param keyproblem
+	 * @param problemids
+	 * @return
+	 */
+	@RemoteMethod
+	public Map changeProblemByHander(String curExamPanel, String problemlevel, String subid, String mustright, String keyproblem, List<String> problemids,String nameLike) {
+		Map map = new HashMap();
+		List<Map> list = problemDanXuanService.changeProblemByHander(curExamPanel,problemlevel,subid,mustright,keyproblem,problemids,nameLike);
+		if(list == null) {
+			map.put("totalProperty", 0);
+		} else {
+			map.put("totalProperty", list.size());
+		}
+		map.put("root", list);
+		System.out.println("手动切换题目之后返回信息 = " + map.toString());
+		return map;
+	}
+	
+	/**
+	 * @author LiangGe
+	 * @param curExamPanel
+	 * @param papernum
+	 * @param problemlevel
+	 * @param nowid
+	 * @param id
+	 * @return
+	 */
+	@RemoteMethod
+	public boolean saveChangeProblemByHander(String curExamPanel, String papernum, String problemlevel, String nowid, String id) {
+		if("0".equals(curExamPanel)) {
+			return problemDanXuanService.saveChangeProblemByHander(Integer.parseInt(papernum),problemlevel,nowid,id);
+		} else if("1".equals(curExamPanel)) {
+			return problemDuoXuanService.saveChangeProblemByHander(Integer.parseInt(papernum),problemlevel,nowid,id);
+		} else {
+			return problemPanDuanService.saveChangeProblemByHander(Integer.parseInt(papernum),problemlevel,nowid,id);
+		}
+	}
+	
+}

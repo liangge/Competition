@@ -1,0 +1,278 @@
+var questionCount = 20;
+var examname;
+var starttime;
+var endtime;
+
+var cm;
+
+var scoreSummaryFields;
+var scoreSummaryStore; 
+var scoreSortGrid;
+
+var testPaperRecord = new Ext.data.Record.create([ {
+	name : 'id'
+}, {
+	name : 'starttime'
+}, {
+	name : 'endtime'
+}, {
+	name : 'examname'
+}, {
+	name : 'remark'
+} ]);
+
+var testPaperRecordStore = new Ext.data.Store({
+	reader : new Ext.data.JsonReader({
+		totalProperty : 'totalProperty',
+		root : 'root'
+	}, testPaperRecord),
+	proxy : new Ext.ux.data.DWRProxy({
+		dwrFunction : CpTestpaperRecordController.getTestPaperRecordList
+	})
+});
+
+// 初始加载比赛基本信息
+function LoadDate() {
+	
+}
+
+// 渲染战队名称
+function renderBold(value) {
+	return "<span style='font-weight:bold;'>" + value + "</span>";
+}
+
+// 渲染答题情况背景
+function renderBgColor(value) {
+	if(value == "正确") {
+		return "<span style='color:green;font-weight:bold;'>" + value + "</span>";
+	} else if(value == "错误") {
+		return "<span style='color:red;font-weight:bold;'>" + value + "</span>";
+	} else {
+		return value;
+	}
+}
+
+// 渲染分数
+function showScoreColor(value, metaData, record, rowIndex, colIndex, store) {
+	if(rowIndex == 0) {
+		return "<span style='color:green;font-weight:bold;'>" + value + "</span>";
+	} else if(rowIndex ==1) {
+		return "<span style='color:green;font-weight:bold;'>" + value + "</span>";
+	} else if(rowIndex ==2) {
+		return "<span style='color:green;font-weight:bold;'>" + value + "</span>";
+	} else {
+		return "<span style='font-weight:bold;'>" + value + "</span>";;
+	}
+}
+
+// 渲染排名
+function showRank(value, metaData, record, rowIndex, colIndex, store) {
+	if(rowIndex == 0) {
+		return "<span style='color:green;font-weight:bold;'>" + "第一名" + "</span>";
+	} else if(rowIndex ==1) {
+		return "<span style='color:green;font-weight:bold;'>" + "第二名" + "</span>";
+	} else if(rowIndex ==2) {
+		return "<span style='color:green;font-weight:bold;'>" + "第三名" + "</span>";
+	} else {
+		return;
+	}
+}
+
+// 设置竞赛基本信息
+function initExamBasicInfo() {
+	questionCount = testPaperRecordStore.getAt(0).get("remark");
+	starttime = testPaperRecordStore.getAt(0).get('starttime');
+	endtime = testPaperRecordStore.getAt(0).get('endtime');
+	examname = testPaperRecordStore.getAt(0).get('examname');
+	// 设置竞赛时间信息
+	Ext.getCmp('examname').setValue("<b>" + examname + "</b>");
+	Ext.getCmp('examtime').setValue(starttime + "  <span style='font-weight:bold;'>至</span>  " + endtime);
+}
+
+// 初始设置竞赛的当前时间信息
+function setCurrentTime() {
+    var now = new Date();
+    
+
+	var year = now.getFullYear();
+	var month = now.getMonth() + 1;
+	var date = now.getDate();
+	var hour = now.getHours();
+	var minu = now.getMinutes();
+	var sec = now.getSeconds();
+
+	if (month < 10) month = "0" + month;
+	if (date < 10) date = "0" + date;
+	if (hour < 10) hour = "0" + hour;
+	if (minu < 10) minu = "0" + minu;
+	if (sec < 10) sec = "0" + sec;
+	var time = "";
+	time = year + "-" + month + "-" + date + " " + hour + ":" + minu + ":"
+			+ sec;
+	checktime = year + "-" + month + "-" + date + " " + hour + ":" + minu;
+	Ext.getCmp('curtime').setValue(time);
+	
+	setTimeout("setCurrentTime()",200);
+}
+
+function loadScoreSortInfo() {
+	CpAnswerRecordController.getSummaryScore(function(data){ 
+		if(data) {
+			scoreSummaryStore.loadData(data);
+		}
+	});
+	
+	setTimeout("loadScoreSortInfo()",2000);
+}
+
+// 动态初始GridPanel列表
+function WindowInit() {
+	var cmItems = [];
+	var fields = [];
+	cmItems.push(new Ext.grid.RowNumberer());
+	
+	cmItems.push({
+		id : 'name',
+		header : '名称',
+		dataIndex : 'name',
+		width : 80,
+		sortable : true,
+		renderer : renderBold
+	});
+	fields.push({
+		name : 'name'
+	});
+
+	for (var i = 1; i <= questionCount; i++) {
+		var cmConfig = {
+			id : '' + i,
+			header : '' + i,
+			dataIndex : '' + i,
+			width : 38,
+			sortable : true,
+			renderer : renderBgColor
+		};
+		cmItems.push(cmConfig);
+		
+		var fieldsConfig = {
+				name : '' + i
+		};
+		fields.push(fieldsConfig);
+	}
+	
+	cmItems.push({
+		id : 'score',
+		header : '总分',
+		dataIndex : 'score',
+		width : 50,
+		sortable : true,
+		renderer : showScoreColor
+	});
+	
+	cmItems.push({
+		id : 'rank',
+		header : '当前排名',
+		dataIndex : 'rank',
+		width : 80,
+		renderer : showRank
+	});
+	
+	fields.push({
+		name : 'score'
+	});
+	
+	cm = new Ext.grid.ColumnModel(cmItems);
+	scoreSummaryFields = Ext.data.Record.create(fields);
+	
+	
+	scoreSummaryStore = new Ext.data.JsonStore({
+		fields : scoreSummaryFields,
+		sortInfo : {field:"score",direction:"DESC"}
+	}); 
+	
+	
+	scoreSortGrid = new Ext.grid.GridPanel({
+		region : 'center',
+		id : 'scoreSortGrid',
+		store : scoreSummaryStore,
+		title : '实时答题情况',
+		loadMask : true,
+		stripeRows : true,
+		autoScroll : true,
+		sortInfo : {field:"score",direction:"DESC"}, 
+		viewConfig : {
+			sortDescText : '降序',
+			sortAscText : '升序',
+			columnsText : '显示列',
+			forceFit : false
+		},
+		cm : cm
+	});
+}
+
+// store加载当前竞赛答题信息
+var form = new Ext.form.FormPanel({
+	region : "north",
+	frame : true,
+	height : 110,
+	labelAlign : 'left',
+	layout : 'column',
+	items : [ {
+		columnWidth : 1.0,
+		layout : 'form',
+		height : 110,
+		frame : true,
+		items : [ {
+			xtype : 'displayfield',
+			fieldLabel : "<span style='font-size:15px;top:5px'>竞赛名称</span>",
+			id : 'examname',
+			labelWidth : 72,
+			labelSeparator : " ：",
+			style : "font-size:20px;position:relative;top:1px;",
+			value : "",
+			cls:'override_label'
+		},{
+			xtype : 'displayfield',
+			fieldLabel : "<span style='font-size:15px;margin:5px,5px,5px,5px'>竞赛时间</span>",
+			id : 'examtime',
+			labelWidth : 72,
+			labelSeparator : " ：",
+			style : "font-size:16px;position:relative;top:1px;",
+			value : "",
+			cls:'override_label'
+		},{
+			xtype : 'displayfield',
+			fieldLabel : "<span style='font-size:15px;top:5px'>当前时间</span>",
+			id : 'curtime',
+			labelWidth : 70,
+			labelSeparator : " ：",
+			style : "font-size:16px;position:relative;top:1px;",
+			value : "",
+			cls:'override_label'
+		}]
+	}]
+});
+
+// 入口
+function ScoreSortInfoPageInit() {
+	// 先加载本次竞赛的时间、题目数量等信息 
+	testPaperRecordStore.load({
+		callback : function(record, options, success) {
+			// 初始竞赛基本信息
+			initExamBasicInfo();
+			// 初始竞赛当前时间
+			setCurrentTime();
+			// 初始grid列信息
+			WindowInit();
+			// store加载当前竞赛答题信息
+			loadScoreSortInfo();
+			// 初始化界面
+			new Ext.Viewport({
+				layout : 'border',
+				hideMode : Ext.isIE ? 'offsets' : 'display',
+				items : [ form, scoreSortGrid ],
+				renderTo : Ext.getBody()
+			});
+		}
+	});
+}

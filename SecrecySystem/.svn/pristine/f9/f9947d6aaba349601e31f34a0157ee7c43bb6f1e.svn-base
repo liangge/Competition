@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated Aug 18, 2014 4:45:24 PM by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="com.egov.secrecysystem.model.CpAnswerRecord" table="cp_answer_record" catalog="competition">
+        <id name="id" type="string">
+            <column name="id" length="36" />
+             <generator class="uuid.hex" />
+        </id>
+        <many-to-one name="cpQuestion" class="com.egov.secrecysystem.model.CpQuestion" fetch="select">
+            <column name="questionid" length="36" />
+        </many-to-one>
+        <many-to-one name="cpUser" class="com.egov.secrecysystem.model.CpUser" fetch="select">
+            <column name="userid" length="36" />
+        </many-to-one>
+        <property name="useranswer" type="string">
+            <column name="useranswer" />
+        </property>
+        <property name="isright" type="java.lang.Integer">
+            <column name="isright" />
+        </property>
+        <property name="remark" type="string">
+            <column name="remark" />
+        </property>
+    </class>
+</hibernate-mapping>

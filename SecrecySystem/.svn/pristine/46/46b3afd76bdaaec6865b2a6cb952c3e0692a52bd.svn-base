@@ -1,0 +1,140 @@
+var form = new Ext.form.FormPanel({
+	title : "成绩查询",
+	region : "north",
+	frame : true,
+	width : 300,
+	height : 65,
+	labelAlign : 'right',
+	items : [ {
+		layout : 'column',
+		items : [
+				{
+					columnWidth : .1,
+					layout : 'form',
+					items : [ {
+						xtype : 'button',
+						text : '成绩查询',
+						anchor : '97.5%',
+						handler : function() {
+							if (form.getForm().isValid()) {
+								/*var summaryCondition = form.getForm()
+										.getValues();*/
+								ScoreRecordController.selectScoreByLoginName(function(data) {
+											if (data) {
+												scoreSummaryStore
+														.loadData(data);
+											} else
+												Ext.MessageBox.alert('提示',
+														"统计失败！");
+
+										});
+
+							} else {
+								Ext.MessageBox.alert('提示', "输入统计条件有误！");
+							}
+						}
+					} ]
+				} ]
+	} ]
+});
+
+var scoreSummaryFields = Ext.data.Record.create([ {
+	name : 'name'
+}, {
+	name : 'loginname'
+}, {
+	name : 'danxuanscore'
+}, {
+	name : 'duoxuanscore'
+}, {
+	name : 'panduanscore'
+}, {
+	name : 'totalscore'
+}, {
+	name : 'remark'
+}, {
+	name : 'scoreremark'
+}, {
+	name : 'starttime'
+} ]);
+
+var scoreSummaryStore = new Ext.data.JsonStore({
+	fields : scoreSummaryFields
+});
+
+var scoreSummarygrid = new Ext.grid.GridPanel({
+	region : 'center',
+	id : 'scoreSummarygrid',
+	store : scoreSummaryStore,
+	title : '各部门成绩统计表',
+	loadMask : true,
+	stripeRows : true,
+	autoScroll : true,
+	// autoExpandColumn : 'collegename',
+	viewConfig : {
+		sortDescText : '降序',
+		sortAscText : '升序',
+		columnsText : '显示列',
+		forceFit : false
+	},
+	columns : [ new Ext.grid.RowNumberer(), {
+		header : '考试时间',
+		dataIndex : 'starttime',
+		width : 220,
+		sortable : true
+	}, {
+		id : 'name',
+		header : '姓 名',
+		dataIndex : 'name',
+		width : 60,
+		sortable : true
+	}, {
+		id : 'loginname',
+		header : '登录用户',
+		dataIndex : 'loginname',
+		width : 120,
+		sortable : true
+	}, {
+		header : '单选题分数',
+		dataIndex : 'danxuanscore',
+		width : 80,
+		sortable : true
+	}, {
+		header : '多选题分数',
+		dataIndex : 'duoxuanscore',
+		width : 80,
+		sortable : true,
+	}, {
+		header : '判断题分数',
+		dataIndex : 'panduanscore',
+		width : 80,
+		sortable : true
+	}, {
+		header : '总分数',
+		dataIndex : 'totalscore',
+		width : 80,
+		sortable : true,
+	}, {
+		header : '部门',
+		dataIndex : 'remark',
+		width : 120,
+		sortable : true
+	}, {
+		header : '零分说明',
+		dataIndex : 'scoreremark',
+		width : 120,
+		sortable : true
+	} ]
+});
+
+function ScoreSummaryInfoPageInit() {
+
+	// 初始化界面
+	new Ext.Viewport({
+		layout : 'border',
+		hideMode : Ext.isIE ? 'offsets' : 'display',
+		items : [ form, scoreSummarygrid ],
+		renderTo : Ext.getBody()
+	});
+
+}

@@ -1,0 +1,109 @@
+package com.egov.secrecysystem.model;
+
+import org.directwebremoting.annotations.DataTransferObject;
+
+@DataTransferObject
+public class SeScoreRecord implements java.io.Serializable {
+
+	private String id;
+	private SeTestPaperRecord seTestPaperRecord;
+	private SeUser seUser;
+	private Integer danxuanscore;
+	private Integer duoxuanscore;
+	private Integer panduanscore;
+	private Integer totalscore;
+	private String remark;
+	private String scoreremark;
+
+	public SeScoreRecord() {
+	}
+
+	public SeScoreRecord(String id, SeTestPaperRecord seTestPaperRecord,
+			SeUser seUser, Integer danxuanscore, Integer duoxuanscore,
+			Integer panduanscore, Integer totalscore, String remark,String scoreremark) {
+		super();
+		this.id = id;
+		this.seTestPaperRecord = seTestPaperRecord;
+		this.seUser = seUser;
+		this.danxuanscore = danxuanscore;
+		this.duoxuanscore = duoxuanscore;
+		this.panduanscore = panduanscore;
+		this.totalscore = totalscore;
+		this.remark = remark;
+		this.scoreremark=scoreremark;
+	}
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
+	public SeTestPaperRecord getSeTestPaperRecord() {
+		return seTestPaperRecord;
+	}
+
+	public void setSeTestPaperRecord(SeTestPaperRecord seTestPaperRecord) {
+		this.seTestPaperRecord = seTestPaperRecord;
+	}
+
+	public SeUser getSeUser() {
+		return seUser;
+	}
+
+	public void setSeUser(SeUser seUser) {
+		this.seUser = seUser;
+	}
+
+	public Integer getDanxuanscore() {
+		return danxuanscore;
+	}
+
+	public void setDanxuanscore(Integer danxuanscore) {
+		this.danxuanscore = danxuanscore;
+	}
+
+	public Integer getDuoxuanscore() {
+		return duoxuanscore;
+	}
+
+	public void setDuoxuanscore(Integer duoxuanscore) {
+		this.duoxuanscore = duoxuanscore;
+	}
+
+	public Integer getPanduanscore() {
+		return panduanscore;
+	}
+
+	public void setPanduanscore(Integer panduanscore) {
+		this.panduanscore = panduanscore;
+	}
+
+	public Integer getTotalscore() {
+		return totalscore;
+	}
+
+	public void setTotalscore(Integer totalscore) {
+		this.totalscore = totalscore;
+	}
+
+	public String getRemark() {
+		return remark;
+	}
+
+	public void setRemark(String remark) {
+		this.remark = remark;
+	}
+
+	public String getScoreremark() {
+		return scoreremark;
+	}
+
+	public void setScoreremark(String scoreremark) {
+		this.scoreremark = scoreremark;
+	}
+
+	
+}

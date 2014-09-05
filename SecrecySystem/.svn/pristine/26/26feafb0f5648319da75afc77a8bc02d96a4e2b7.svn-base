@@ -1,0 +1,639 @@
+var instructor_currentSearchFilter = "";
+var instructorinfowin;
+var instructorimportwin;
+
+var papernum = '0';
+
+var seuser = new Ext.data.Record.create([{
+	name : 'id'
+}, {
+	name : 'name'
+}, {
+	name : 'loginname'
+}, {
+	name : 'danxuanscore'
+}, {
+	name : 'duoxuanscore'
+}, {
+	name : 'panduanscore'
+}, {
+	name : 'totalscore'
+}, {
+	name : 'remark'
+} , {
+	name : 'scoreremark'
+} ]);
+
+var emptysecrecy = new seuser({
+	id : '',
+	name : '',
+	loginname : '',
+	danxuanscore : '',
+	duoxuanscore : '',
+	panduanscore : '',
+	totalscore : '',
+	remark : '',
+	scoreremark : ''
+
+});
+
+var instructorstore = new Ext.data.Store({
+	reader : new Ext.data.JsonReader({
+		totalProperty : 'totalProperty',
+		root : 'root'
+	}, seuser),
+	proxy : new Ext.ux.data.DWRProxy({
+		dwrFunction : ScoreRecordController.paginationShow
+	})
+});
+
+var instructorfields = [ {
+	columnWidth : .3,
+	layout : 'form',
+	items : [{
+		xtype : 'hidden',
+		name : 'id',
+		anchor : '95%'
+	},{
+		xtype : 'textfield',
+		id : 'name',
+		fieldLabel : '姓  名',
+		name : 'name',
+		anchor : '97.5%',
+		readOnly : true,
+		allowBlank : false
+	} ]
+}, {
+	columnWidth : .3,
+	layout : 'form',
+	items : [ {
+		xtype : 'textfield',
+		id : 'loginname',
+		fieldLabel : '登陆用户',
+		name : 'loginname',
+		anchor : '97.5%',
+		readOnly : true,
+		allowBlank : false
+	} ]
+}, {
+	columnWidth : .3,
+	layout : 'form',
+	items : [ {
+		xtype : 'textfield',
+		id : 'danxuanscore',
+		fieldLabel : '单选题分数',
+		name : 'danxuanscore',
+		anchor : '97.5%',
+		allowBlank : false
+	} ]
+}, {
+	columnWidth : .3,
+	layout : 'form',
+	items : [ {
+		xtype : 'textfield',
+		fieldLabel : '多选题分数',
+		id : 'duoxuanscore',
+		name : 'duoxuanscore',
+		anchor : '97.5%',
+		// maxLength : 55,
+		allowBlank : false
+	} ]
+}, {
+	columnWidth : .3,
+	layout : 'form',
+	items : [ {
+		xtype : 'textfield',
+		id : 'panduanscore',
+		fieldLabel : '判断题分数',
+		name : 'panduanscore',
+		anchor : '97.5%',
+		allowBlank : false
+	} ]
+}, {
+	columnWidth : .3,
+	layout : 'form',
+	items : [ {
+		xtype : 'textfield',
+		id : 'totalscore',
+		fieldLabel : '总分数',
+		name : 'totalscore',
+		anchor : '97.5%',
+		allowBlank : false
+	} ]
+}, {
+	columnWidth : .3,
+	layout : 'form',
+	items : [ {
+		xtype : 'textfield',
+		id : 'remark',
+		fieldLabel : '部  门',
+		name : 'remark',
+		anchor : '97.5%',
+		readOnly : true,
+		allowBlank : false
+	} ]
+}, {
+	columnWidth : .3,
+	layout : 'form',
+	items : [ {
+		xtype : 'textfield',
+		id : 'scoreremark',
+		fieldLabel : '零分说明',
+		name : 'scoreremark',
+		anchor : '97.5%',
+		//readOnly : true,
+		allowBlank : true
+	} ]
+} ];
+
+var college_instructorbasicform = new Ext.FormPanel({
+	id : 'college_instructorbasicform',
+	width : 600,
+	labelWidth : 65,
+	region : 'center',
+	labelAlign : 'left',
+	layout : 'column',
+	items : [ instructorfields ]
+});
+
+var college_instructorform = new Ext.Panel({
+	id : 'college_studentform',
+	title : '成绩基本信息',
+	labelWidth : 80,
+	height : 400,
+	autoScroll : true,
+	frame : true,
+	bodyStyle : 'padding:5',
+	labelAlign : 'left',
+	region : 'south',
+	layout : 'border',
+	buttonAlign : 'center',
+	items : [ college_instructorbasicform ],
+	buttons : [ {
+		text : '保存',
+		handler : function() {
+			enableOfInstructorbasicform();
+			Ext.MessageBox.wait("正在执行...", "提示");
+			if (college_instructorbasicform.getForm().isValid()) {
+				var seuser = {
+					id:'',
+					name : '',
+					loginname : '',
+					danxuanscore : '',
+					duoxuanscore : '',
+					panduanscore : '',
+					totalscore : '',
+					remark : '',
+					scoreremark : ''
+
+				};
+
+				enableOfInstructorbasicform();
+				seuser = college_instructorbasicform.getForm().getValues();
+				// stunum = Ext.getCmp("studentnum").getValue();
+				ScoreRecordController.updateScoreRecord(seuser, function(data) {
+					if (data) {
+						Ext.MessageBox.alert('提示', "保存成功！");
+					} else {
+						Ext.MessageBox.alert('提示', "保存失败！");
+					}
+					// readOnlyOfStudentbasicform();
+				});
+			} else {
+				Ext.MessageBox.alert('提示', "输入信息有误！");
+			}
+
+		}
+	}, {
+		text : '清空',
+		id : 'clearstuinfo',
+		handler : function() {
+			enableOfInstructorbasicform();
+			college_instructorbasicform.getForm().reset();
+			college_instructorbasicform.getForm().reset();
+		}
+	} ]
+});
+
+function enableOfInstructorbasicform() {
+	Ext.getCmp("name").setDisabled(false);
+	Ext.getCmp("loginname").setDisabled(false);
+	// Ext.getCmp("id").setDisabled(false);
+	Ext.getCmp("danxuanscore").setDisabled(false);
+	Ext.getCmp("duoxuanscore").setDisabled(false);
+	Ext.getCmp("panduanscore").setDisabled(false);
+	Ext.getCmp("totalscore").setDisabled(false);
+	Ext.getCmp("remark").setDisabled(false);
+	Ext.getCmp("scoreremark").setDisabled(false);
+}
+
+var instructor_searchform = new Ext.form.FormPanel({
+	id : 'instructor_searchform',
+	region : 'center',
+	// autoScroll:true,
+	// bodyStyle:"overflow-y:scroll;overflow-x:hidden",
+	frame : true,
+	labelWidth : 68,
+	autoHeight : true,
+	items : [ {
+		// xtype:'fieldset',
+		title : '成绩信息',
+		autoHeight : true,
+		layout : 'column',
+		items : [ {
+			columnWidth : .5,
+			layout : 'form',
+			items : [ {
+				xtype : 'textfield',
+				fieldLabel : '姓 名',
+				name : 'and$seUser-name$like$%value%',
+				anchor : '96%'
+			} ]
+		}, {
+			columnWidth : .5,
+			layout : 'form',
+			items : [ {
+				xtype : 'textfield',
+				fieldLabel : '登陆用户',
+				name : 'and$seUser-loginname$=$value',
+				anchor : '96%'
+			} ]
+		}, {
+			columnWidth : .5,
+			layout : 'form',
+			items : [ {
+				xtype : 'textfield',
+				fieldLabel : '部  门',
+				name : 'and$seUser-remark$like$%value%',
+				anchor : '96%',
+			} ]
+		}, {
+			columnWidth : .5,
+			layout : 'form',
+			items : [ {
+				xtype : 'textfield',
+				fieldLabel : '零分说明',
+				name : 'and$scoreremark$like$%value%',
+				anchor : '96%'
+			} ]
+		} ]
+	} ],
+	keys : [ {
+		key : 13,// 回车
+		fn : function() {
+			instructor_search();
+			instructor_searchWin.hide();
+		}
+	} ]
+});
+
+var instructor_searchWin = new Ext.Window({
+	title : '查询条件',
+	width : 500,
+	autoHeight : true,
+	minWidth : 300,
+	minHeight : 200,
+	closeAction : 'hide',
+	layout : 'fit',
+	plain : true,
+	buttonAlign : 'center',
+	items : [ instructor_searchform ],
+	modal : true,
+	shadow : true,
+	buttons : [ {
+		text : '查询',
+		handler : function() {
+			
+			instructor_search(papernum);
+			instructor_searchWin.hide();
+		}
+	}, {
+		text : '清空',
+		handler : function() {
+			instructor_searchform.getForm().reset();
+			instructor_currentSearchFilter = "";
+		}
+	}, {
+		text : '关闭',
+		handler : function() {
+			instructor_searchWin.hide();
+		}
+	} ]
+});
+
+var instructorgrid = new Ext.grid.GridPanel({
+	region : 'center',
+	id : 'instructorgrid',
+	store : instructorstore,
+	loadMask : true,
+	width : 5000,
+	stripeRows : true,
+	autoScroll : true,
+	viewConfig : {
+		sortDescText : '降序',
+		sortAscText : '升序',
+		columnsText : '显示列',
+		forceFit : false
+	},
+	columns : [ new Ext.grid.RowNumberer({
+		width : 28
+	}), {
+		id : 'name',
+		header : '姓  名',
+		dataIndex : 'name',
+		width : 80,
+		sortable : true
+	}, {
+		id : 'loginname',
+		header : '登录用户',
+		dataIndex : 'loginname',
+		width : 80,
+		sortable : true
+	}, {
+		id : 'danxuanscore',
+		header : '单选题分数',
+		dataIndex : 'danxuanscore',
+		width : 80,
+		sortable : true
+	}, {
+		id : 'duoxuanscore',
+		header : '多选题分数',
+		dataIndex : 'duoxuanscore',
+		width : 80,
+		sortable : true
+	}, {
+		id : 'panduanscore',
+		header : '判断题分数',
+		dataIndex : 'panduanscore',
+		width : 80,
+		sortable : true
+	}, {
+		id : 'totalscore',
+		header : '总分数',
+		dataIndex : 'totalscore',
+		width : 150,
+		sortable : true
+	}, {
+		id : 'remark',
+		header : '部   门',
+		dataIndex : 'remark',
+		width : 150,
+		sortable : true
+	} , {
+		id : 'scoreremark',
+		header : '零分说明',
+		dataIndex : 'scoreremark',
+		width : 150,
+		sortable : true
+	}],
+	tbar : [
+			{
+				text : '编辑',
+				iconCls : 'edit',
+				scope : this,
+				handler : function() {
+					instructorgrid.fireEvent('rowdblclick', instructorgrid);
+				}
+			},
+			'-',
+			{
+				text : '删除',
+				iconCls : 'remove',
+				scope : this,
+				handler : function() {
+					if (instructorgrid.getSelectionModel().hasSelection()) {
+						Ext.MessageBox.confirm('提示', '你确定要删除选中的信息?', function(
+								button) {
+							if (button == 'yes') {
+								var list = instructorgrid.getSelectionModel()
+										.getSelections();
+								var rList = [];
+								for (var i = 0; i < list.length; i++) {
+									rList[i] = list[i].data["id"];
+								}
+
+								ScoreRecordController.deleteScoreRecord(rList,
+										function(data) {
+											if (data) {
+												Ext.MessageBox.alert('提示',
+														'删除成绩成功!');
+												instructorGridInit(papernum);
+											} else {
+												Ext.MessageBox.alert('提示',
+														"删除成绩失败!");
+											}
+										});
+							}
+						});
+					} else
+						Ext.MessageBox.alert('提示', "请至少选择一条记录!");
+				}
+			}, '-', {
+				text : '查询',
+				iconCls : 'upload-icon',
+				scope : this,
+				handler : function() {
+					instructor_searchWin.show();
+					instructor_searchform.getForm().reset();
+				}
+			}, '-', {
+				text : '导出成绩信息',
+				iconCls : 'import',
+				scope : this,
+				handler : function() {
+					exportInstructorsInfoExcel();
+				}
+			}
+
+	],
+	bbar : new Ext.PagingToolbar({
+		pageSize : 20,
+		store : instructorstore,
+		displayInfo : true,
+		firstText : '首页',
+		lastText : '尾页',
+		prevText : '上一页',
+		nextText : '下一页',
+		refreshText : '刷新',
+		displayMsg : '显示第 {0} 条到 {1} 条记录，一共 {2} 条',
+		emptyMsg : "没有记录",
+		doLoad : function(start) {
+			var params = {};
+			params.filter = instructor_currentSearchFilter;
+			params.start = start;
+			params.limit = this.pageSize;
+			params.papernum=papernum;
+			if (this.fireEvent("beforechange", this, params) !== false) {
+				this.store.load({
+					params : params
+				});
+			}
+		}
+	}),
+	listeners : {
+		rowdblclick : function(grid) {
+			enableOfInstructorbasicform();
+			if (grid.getSelectionModel().hasSelection()) {
+				instructorInfoWinInit("编辑成绩信息").show();
+				college_instructorbasicform.getForm().setValues(
+						grid.getSelectionModel().getSelected().data);
+			} else {
+				Ext.MessageBox.alert('提示', "请选择一条信息进行编辑!");
+			}
+
+		}
+	}
+});
+
+function exportInstructorsInfoExcel() {
+	var f = document.getElementById('exportInstructorsInfoExcel');
+	f.action = '../exportScoreRecordInfoExcel.do?papernum='+papernum;
+	
+	f.submit({
+		
+		failure : function(form, action) {
+			var error = Ext.util.JSON
+					.decode(action.response.responseText).error;
+			Ext.MessageBox.alert('导出失败', "原因：" + error);
+		}
+
+	});
+//	Ext.Ajax.request({
+//		url:'../exportScoreRecordInfoExcel.do',
+//		method:'post',
+//		params:{papernum:papernum},
+//		success:function(){
+//			alert("export success!");
+//		}
+//		
+//	});
+}
+
+function instructor_search(papernum) {
+	instructor_currentSearchFilter = Ext.encode(instructor_searchform.getForm()
+			.getFieldValues());
+	instructorstore.load({
+		params : {
+			filter : instructor_currentSearchFilter,
+			start : 0,
+			limit : 20,
+			papernum : papernum
+		}
+	});
+}
+
+function instructorInfoWinInit(title) {
+	if (!instructorinfowin) {
+		instructorinfowin = new Ext.Window({
+			title : '',
+			width : 1000,
+			height : 400,
+			closeAction : 'hide',
+			layout : 'fit',
+			plain : true,
+			bodyStyle : 'padding:5px',
+			items : [ college_instructorform ]
+		});
+	}
+	instructorinfowin.setTitle(title);
+	return instructorinfowin;
+}
+
+function instructorGridInit(papernum) {
+	instructorstore.load({
+		params : {
+			filter : instructor_currentSearchFilter,
+			start : 0,
+			limit : 20,
+			papernum : papernum
+		}
+	});
+}
+
+function studentInfoManagerPageInit() {
+	new Ext.Viewport({
+		layout : 'border',
+		hideMode : Ext.isIE ? 'offsets' : 'display',
+		items : [form,instructorgrid],
+		renderTo : Ext.getBody()
+	});
+	instructorGridInit(papernum);
+	WindowInit();
+}
+
+var comnoPaperNumStore = new Ext.data.JsonStore({
+	fields : [ 'papernum', 'examname' ]
+});
+
+var form = new Ext.form.FormPanel(
+		{
+			title : "成绩统计",
+			region : "north",
+			frame : true,
+			width : 300,
+			height : 65,
+			labelAlign : 'right',
+			items : [ {
+				layout : 'column',
+				items : [
+						{
+							columnWidth : .3,
+							layout : 'form',
+							labelWidth : 60,
+							items : [ {
+								xtype : 'combo',
+								// id:"papernum",
+								fieldLabel : '具体考试',
+								hiddenName : 'papernum',
+								triggerAction : 'all',
+								store : comnoPaperNumStore,
+								displayField : 'examname',
+								valueField : 'papernum',
+								mode : 'local',
+								anchor : '97.5%',
+								editable : false,
+								allowBlank : false,
+								emptyText : '---请选择---'
+							} ]
+						},
+
+						{
+							columnWidth : .1,
+							layout : 'form',
+							items : [ {
+								xtype : 'button',
+								text : '查询统计',
+								anchor : '97.5%',
+								handler : function() {
+									if (form.getForm().isValid()) {
+										var summaryCondition = form.getForm().getValues();
+										papernum = summaryCondition.papernum;
+										instructor_currentSearchFilter = "";
+										instructorGridInit(papernum);
+/*										ScoreRecordController.getScoreRecordByDate(summaryCondition, function(data) {
+												if (data) {
+													instructorstore.loadData(data);
+												} else
+													Ext.MessageBox.alert(
+																	'提示',
+																	"统计失败！");
+											});*/
+
+									} else {
+										Ext.MessageBox.alert('提示', "输入统计条件有误！");
+									}
+								}
+							} ]
+						} ]
+			} ]
+		});
+
+function WindowInit() {
+	TestPaperRecordController.getPaperNumList(function(data) {
+		if (data) {
+			comnoPaperNumStore.loadData(data);
+		}
+	});
+}
+
+

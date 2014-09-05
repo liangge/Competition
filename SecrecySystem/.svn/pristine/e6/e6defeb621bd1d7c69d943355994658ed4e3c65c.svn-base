@@ -1,0 +1,27 @@
+package com.egov.secrecysystem.dao;
+
+import com.egov.secrecysystem.model.CpAnswerRecord;
+import com.egov.secrecysystem.model.SeUser;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.hibernate.Query;
+
+public class CpAnswerRecordDao extends AbstractHibernateDao<CpAnswerRecord> {
+	CpAnswerRecordDao() {
+		super(CpAnswerRecord.class);
+	}
+
+	/**
+	 * @author LiangGe
+	 * @return
+	 * 获取当前所有答题记录
+	 */
+	public List<CpAnswerRecord> getAnswerInfo() {
+		String hql = "from com.egov.secrecysystem.model.CpAnswerRecord e where ";
+		return this.getCurrentSession().createQuery(hql).list();
+	}
+}

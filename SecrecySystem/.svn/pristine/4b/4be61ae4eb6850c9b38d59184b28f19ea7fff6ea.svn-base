@@ -1,0 +1,11 @@
+package com.egov.secrecysystem.dao;
+
+import com.egov.secrecysystem.model.CpUser;
+import com.egov.secrecysystem.model.SeUser;
+
+public class CpUserDao extends AbstractHibernateDao<CpUser>{
+	
+	CpUserDao() {
+		super(CpUser.class);
+	}
+}

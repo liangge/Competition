@@ -1,0 +1,25 @@
+package com.egov.secrecysystem.dao;
+
+import java.util.List;
+import java.util.Map;
+
+import com.egov.secrecysystem.model.SeQuestionBank;
+
+
+public class QuestionBankDao  extends AbstractHibernateDao<SeQuestionBank> {
+
+	QuestionBankDao(){
+		super(SeQuestionBank.class);
+	}
+	
+	public List<SeQuestionBank> findBySubname(int problemlevel, String subname) {
+		String hql = "from com.egov.secrecysystem.model.SeQuestionBank t where t.problemlevel =:problemlevel  and t.subname =:subname";
+		return this.getCurrentSession().createQuery(hql).setParameter("problemlevel", problemlevel).setParameter("subname", subname).list();
+	}
+
+	// 获取 子题库
+	public List<Map> getSubList(int userlevel) {
+        String hql = "select new map(t.id as id, t.subname as subname) from com.egov.secrecysystem.model.SeQuestionBank t where t.problemlevel =:problemlevel ";
+        return this.getCurrentSession().createQuery(hql).setParameter("problemlevel", userlevel).list();
+	}
+}

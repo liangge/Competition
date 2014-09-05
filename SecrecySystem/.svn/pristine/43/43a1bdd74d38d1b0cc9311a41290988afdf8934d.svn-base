@@ -1,0 +1,105 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+	pageEncoding="UTF-8"%>
+<%@ page import="org.json.simple.JSONArray" %>	
+<%@ page import="org.json.simple.JSONObject" %>	
+<%@ page import="java.util.List" %>	
+<%@ page import="java.util.Map" %>	
+<%@ page import="java.io.Writer" %>	
+<%@ page import="javax.servlet.http.HttpSession" %>	
+<%@ page import="javax.servlet.http.HttpServletResponse" %>	
+<%@ page import="javax.servlet.http.HttpServletRequest" %>	
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" type="text/css" href="/SecrecySystem/resources/css/regulation.css" id="cssfile"/>
+<script type="text/javascript">
+
+</script>
+<%
+	HttpSession curSession = request.getSession();
+	Writer write = response.getWriter();
+	List<Map> list = (List<Map>)curSession.getAttribute("title");
+	List<Map> news = (List<Map>)curSession.getAttribute("news");
+	String Title = "";
+	if(news.size() > 0) {
+		Title = news.get(0).get("titlename").toString();
+	} else {
+		Title = "暂无信息";
+	}
+	
+%>
+</head>
+<body>
+	<div id="wrap">
+		<div id="wrapn">
+ 			<div id="wzgg">
+<!-- 				<div class="notice">最新公告：</div>
+				<div id="scrollDiv">
+					<ul>内容加载中...</ul>
+				</div> -->
+			</div>
+			<!-- 中间新闻部分  -->
+			<div class="cyleft">
+				<div class="location">
+					您所在位置：知识库信息 → <%=Title%>
+				</div>
+				<div class="sub_right">
+					<h3><%=Title%></h3>
+				</div>
+				<div class="cyfl">
+					<div class="syflnr" style="width: 727px; height: auto">
+						<div class="syflbt">
+							<strong><%=Title%></strong>
+						</div>
+						<ul class="news_list">
+							<%
+								for(Map element: news) {
+									String title = element.get("title").toString();
+									String date = element.get("date").toString();
+									String jsp = element.get("jsp").toString();
+									String id = element.get("id").toString();
+							%>		
+							<li><span><%=date %></span><a href=<%=jsp%>?id=<%=id %>><%=title%></a></li>
+							<%
+								}
+							%>
+						</ul>
+						<div class='clear'></div>
+						<div class="xtfy">
+							共有<b><%=news.size()%></b>部&nbsp;&nbsp;当前：第<b>1</b>页/共<b>1</b>页&nbsp;首页</a>&nbsp;上一页</a>&nbsp;下一页</a>&nbsp;尾页</a>&nbsp;<select
+								name="select" style="font-size: 8pt"
+								onchange="javascript:window.location.href=this.options[this.selectedIndex].value"><option
+									value=newslist8_1.html Selected>第1页</option></select>
+						</div>
+					</div>
+				</div>
+			</div><!-- 中间新闻部分  -->
+			
+			<!-- 左边导航部分  -->
+			<div class="sub_left">
+				<h2>目录向导</h2>
+				<ul>
+					<%
+						for (Map element : list) {
+							String titlename = element.get("titlename").toString();
+							String id = element.get("id").toString();
+					%>
+					<li><a href=RegulationInfomanage.do?id=<%=id %>><%=titlename%></a></li>
+					<%
+						}
+					%>
+				</ul>
+			</div><!-- 左边导航部分  -->
+			<div class="clear"></div>
+			<div id="bottom">
+			<br/>
+				版权所有：杭州电子科技大学保密学院 
+				<br />
+			</div>
+		</div>
+	</div>
+</body>
+</html>

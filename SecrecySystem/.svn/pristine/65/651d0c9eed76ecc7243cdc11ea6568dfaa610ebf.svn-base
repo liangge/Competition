@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2012-3-26 19:37:28 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="com.egov.secrecysystem.model.SeProblemPanDuan" table="se_problem_panduan" catalog="secrecysystem">
+        <id name="id" type="string">
+            <column name="ID" length="36" />
+            <generator class="uuid.hex" />
+        </id>
+        <many-to-one name="seQuestionBank" class="com.egov.secrecysystem.model.SeQuestionBank" fetch="select">
+            <column name="SUBID" length="36">
+                <comment>&#189;&#199;&#201;&#171;ID</comment>
+            </column>
+        </many-to-one>
+        <property name="problemnum" type="string">
+            <column name="PROBLEMNUM" />
+        </property>
+        <property name="problemlevel" type="string">
+            <column name="PROBLEMLEVEL" />
+        </property>
+        <property name="mustright" type="string">
+            <column name="MUSTRIGHT" length="2" />
+        </property>
+         <property name="keyproblem" type="string">
+            <column name="KEYPROBLEM" length="2" />
+        </property>
+        <property name="question" type="string">
+            <column name="QUESTION" >
+                <comment>&#201;&#237;&#183;&#221;&#214;&#164;&#186;&#197;</comment>
+            </column>
+        </property>
+        
+        <property name="answer" type="string">
+            <column name="ANSWER" />
+        </property>
+		<set name="seAnswerRecordPanDuans" table="se_answer_record_panduan" inverse="true" lazy="true" fetch="select">
+            <key>
+                <column name="PANDUANID" length="36" />
+            </key>
+            <one-to-many class="com.egov.secrecysystem.model.SeAnswerRecordPanDuan" />
+        </set>
+        <set name="sePaperPanDuans" table="se_paper_panduan" inverse="true" lazy="true" fetch="select">
+            <key>
+                <column name="PANDUANID" length="36" />
+            </key>
+            <one-to-many class="com.egov.secrecysystem.model.SePaperPanDuan" />
+        </set>
+
+    </class>
+</hibernate-mapping>

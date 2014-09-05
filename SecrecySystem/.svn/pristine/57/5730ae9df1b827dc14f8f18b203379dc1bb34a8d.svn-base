@@ -1,0 +1,94 @@
+package com.egov.secrecysystem.dao;
+
+import java.util.List;
+import java.util.Map;
+
+import org.hibernate.Query;
+
+import com.egov.secrecysystem.model.SeAnswerRecordPanDuan;
+
+
+public class AnswerRecordPanDuanDao  extends AbstractHibernateDao<SeAnswerRecordPanDuan> {
+
+	AnswerRecordPanDuanDao(){
+		super(SeAnswerRecordPanDuan.class);
+	}
+	// 统计判断题题目的错误率,考虑全部题目、一级保密题目等信息
+		// problemlevel = 000 表示全部题目
+		public List<Map> getAnswerRateShow(String whereString,
+				Map<String, Object> valuesMap, int pageNum, int pageSize, String problemlevel, String type, String nameLike) {
+			String hql = "select new map(t.id as id, t.seProblemPanDuan.problemlevel as problemlevel, t.seProblemPanDuan.mustright as mustright, t.seProblemPanDuan.keyproblem as keyproblem,"
+					+ "t.seProblemPanDuan.question as question,"
+					+ "t.seProblemPanDuan.answer as answer,t.seProblemPanDuan.problemnum as problemnum,count(t) as count ,sum(t.isright) as sum) from com.egov.secrecysystem.model.SeAnswerRecordPanDuan t ";
+			hql += whereString;
+			// 如果不是查询全部信息，则需要设置具体等级
+			if(! "000".equals(problemlevel)) {
+				hql += " and t.seProblemPanDuan.problemlevel =:problemlevel";
+			}
+			// 查询条件不为空
+			if(!"".equals(nameLike)) {
+				hql += " and t.seProblemPanDuan.question like :question";
+			}
+			// type代表查询题目类型
+			if("1".equals(type)) {
+				System.out.println("必对题目");
+				hql += " and t.seProblemPanDuan.mustright = '1' ";
+			} else if("2".equals(type)) {
+				System.out.println("关键题目");
+				hql += " and t.seProblemPanDuan.keyproblem = '1' ";
+			}
+			hql += " group by t.seProblemPanDuan.id ";
+			Query query = this.getCurrentSession().createQuery(hql)
+					.setFirstResult(pageNum).setMaxResults(pageSize);
+			String[] perchs = valuesMap.keySet().toArray(new String[0]);
+
+			for (int i = 0; i < perchs.length; i++) {
+				if (perchs[i].equals("score")) {
+					query.setParameter(perchs[i],
+							Integer.parseInt((String) valuesMap.get(perchs[i])));
+				} else {
+					query.setParameter(perchs[i], valuesMap.get(perchs[i]));
+				}
+			}
+			if(! "000".equals(problemlevel)) {
+				query.setParameter("problemlevel", problemlevel);
+			}
+			if(! "".equals(nameLike)) {
+				query.setString("question", "%" + nameLike + "%");
+			}
+			return query.list();
+		}
+		// 题目数量
+		public long getAnswerTotalCount(String whereString,
+				Map<String, Object> valuesMap, String problemlevel, String type, String nameLike) {
+			String hql = "select t from com.egov.secrecysystem.model.SeAnswerRecordPanDuan t ";
+			hql += whereString;
+			// 查询具体等级题目错误率信息
+			if(! "000".equals(problemlevel)) {
+				hql += " and t.seProblemPanDuan.problemlevel =:problemlevel";
+			}
+			if("1".equals(type)) {
+				hql += " and t.seProblemPanDuan.mustright = '1' ";
+			} else if ("2".equals(type)) {
+				hql += " and t.seProblemPanDuan.keyproblem = '1' ";
+			}
+			// 查询条件不为空
+			if(!"".equals(nameLike)) {
+				hql += " and t.seProblemPanDuan.question like :question";
+			}
+			hql += " and t is not null group by t.seProblemPanDuan.id";
+			Query query = this.getCurrentSession().createQuery(hql);
+			String[] perchs = valuesMap.keySet().toArray(new String[0]);
+			for (int i = 0; i < perchs.length; i++) {
+				query.setParameter(perchs[i], valuesMap.get(perchs[i]));
+			}
+			if(! "000".equals(problemlevel)) {
+				query.setParameter("problemlevel", problemlevel);
+			}
+			if(! "".equals(nameLike)) {
+				query.setString("question", "%" + nameLike + "%");
+			}
+			return query.list().size();
+		}
+	
+}
